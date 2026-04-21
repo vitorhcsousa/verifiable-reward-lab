@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 import torch
+from torch import Tensor
 
 from rlvr_from_scratch.model.positional import (
     ALiBi,
@@ -152,7 +153,9 @@ def test_rope_relative_position_property() -> None:
     Q_rot, K_rot = rope(Q, K)
 
     # Pairs with the same relative offset (n - m = 5) must match.
-    dot_at = lambda m, n: (Q_rot[0, 0, m] * K_rot[0, 0, n]).sum()
+    def dot_at(m: int, n: int) -> Tensor:
+        return (Q_rot[0, 0, m] * K_rot[0, 0, n]).sum()
+
     assert torch.allclose(dot_at(0, 5), dot_at(3, 8), atol=1e-5)
     assert torch.allclose(dot_at(1, 6), dot_at(10, 15), atol=1e-5)
 
