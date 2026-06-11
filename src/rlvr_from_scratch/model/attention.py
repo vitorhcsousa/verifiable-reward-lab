@@ -16,6 +16,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
+from rlvr_from_scratch.model.positional import RotaryPositionalEmbedding
+
 
 # =========================================================================
 # Scaled Dot-Product Attention
@@ -112,9 +114,19 @@ class MultiHeadAttention(nn.Module):
         d_model: Model dimension.
         n_heads: Number of attention heads. Must divide d_model evenly.
         bias: Whether to use bias in projection layers.
+        rope: Optional rotary position embedding, applied to Q and K per
+              head before attention. Default None (no positional rotation).
+              Assumes self-attention — Q and K share absolute positions.
     """
 
-    def __init__(self, d_model: int, n_heads: int, *, bias: bool = False) -> None:
+    def __init__(
+        self,
+        d_model: int,
+        n_heads: int,
+        *,
+        bias: bool = False,
+        rope: RotaryPositionalEmbedding | None = None,
+    ) -> None:
         super().__init__()
         if d_model % n_heads != 0:
             msg = f"d_model ({d_model}) must be divisible by n_heads ({n_heads})"
@@ -123,6 +135,7 @@ class MultiHeadAttention(nn.Module):
         self.d_model = d_model
         self.n_heads = n_heads
         self.d_k = d_model // n_heads
+        self.rope = rope
 
         # =========================================
         # Four learned projections
@@ -172,7 +185,18 @@ class MultiHeadAttention(nn.Module):
         V = self._split_heads(V)  # (B, H, T_k, d_k)
 
         # =========================================
-        # 3. KV-cache (for incremental decoding)
+        # 3. Rotary position embedding (RoPE), applied per-head
+        # =========================================
+        # RoPE rotates Q and the *current* K by their absolute positions.
+        # With a KV-cache the new tokens begin at position = cached length,
+        # so that becomes the offset; cached K were already rotated at their
+        # own step. V is never rotated.
+        if self.rope is not None:
+            offset = kv_cache[0].size(2) if kv_cache is not None else 0
+            Q, K = self.rope(Q, K, offset=offset)  # both (B, H, T, d_k)
+
+        # =========================================
+        # 4. KV-cache (for incremental decoding)
         # =========================================
         new_kv_cache: tuple[Tensor, Tensor] | None = None
         if kv_cache is not None:
@@ -183,12 +207,12 @@ class MultiHeadAttention(nn.Module):
             new_kv_cache = (K, V)
 
         # =========================================
-        # 4. Attention
+        # 5. Attention
         # =========================================
         attn_output, weights = scaled_dot_product_attention(Q, K, V, mask)
 
         # =========================================
-        # 5. Merge heads + output projection
+        # 6. Merge heads + output projection
         # =========================================
         attn_output = self._merge_heads(attn_output)  # (B, T_q, d_model)
         output = self.W_O(attn_output)  # (B, T_q, d_model)
