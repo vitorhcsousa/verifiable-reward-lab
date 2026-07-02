@@ -40,7 +40,6 @@ from typing import Literal
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch import Tensor
 
 from rlvr_from_scratch.model.attention import causal_mask
@@ -52,6 +51,7 @@ from rlvr_from_scratch.model.positional import (
     RotaryPositionalEmbedding,
     SinusoidalPositionalEncoding,
 )
+from rlvr_from_scratch.model.sampling import sample
 
 # Per-layer key/value cache: (K, V), each (B, H, T_prev, d_k).
 KVCache = tuple[Tensor, Tensor]
@@ -365,19 +365,27 @@ class DecoderTransformer(nn.Module):
         *,
         temperature: float = 1.0,
         do_sample: bool = False,
+        top_k: int | None = None,
+        top_p: float | None = None,
+        generator: torch.Generator | None = None,
         use_cache: bool = True,
     ) -> Tensor:
         """Autoregressively extend a prompt, one token at a time.
 
-        Greedy by default (``do_sample=False``); set ``do_sample=True`` for
-        temperature sampling. Richer decoders (top-k / top-p) land in the
-        sampling module — this is the minimal autoregressive loop.
+        Greedy by default (``do_sample=False``). With ``do_sample=True``
+        the next token is drawn via :func:`sample`, which handles
+        temperature, top-k and top-p (nucleus) filtering — this method
+        stays the minimal autoregressive loop.
 
         Args:
             idx:            Prompt token ids (B, T).
             max_new_tokens: Number of tokens to append.
             temperature:    Softmax temperature when sampling (>0).
             do_sample:      Sample from the distribution vs take the argmax.
+            top_k:          Keep only the k largest logits before sampling.
+            top_p:          Nucleus filter: keep the smallest prefix with
+                            cumulative probability >= top_p.
+            generator:      Optional RNG for reproducible sampling.
             use_cache:      Use an incremental KV-cache (RoPE/none only).
                             Falls back to full recompute otherwise.
 
@@ -402,11 +410,15 @@ class DecoderTransformer(nn.Module):
                 logits, _ = self(cond)
 
             next_logits = logits[:, -1, :]  # (B, vocab)
-            if do_sample:
-                probs = F.softmax(next_logits / temperature, dim=-1)
-                next_id = torch.multinomial(probs, num_samples=1)  # (B, 1)
-            else:
-                next_id = next_logits.argmax(dim=-1, keepdim=True)  # (B, 1)
+            # Greedy == temperature 0 in sample(); filters are irrelevant
+            # then, so the default path stays byte-identical to before.
+            next_id = sample(
+                next_logits,
+                temperature=temperature if do_sample else 0.0,
+                top_k=top_k,
+                top_p=top_p,
+                generator=generator,
+            )  # (B, 1)
             idx = torch.cat([idx, next_id], dim=1)
 
         if was_training:

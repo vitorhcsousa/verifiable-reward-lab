@@ -320,3 +320,48 @@ def test_generate_respects_max_seq_len() -> None:
     with pytest.raises(ValueError, match="exceeds"):
         model = _model(max_seq_len=8)
         model(_ids(t=9, b=1))
+
+
+# =========================================================================
+# Generation: sampling wiring (640.5 / 640.6)
+# =========================================================================
+
+
+def test_generate_sampling_reproducible_with_generator() -> None:
+    """Seeded generator -> identical sampled continuations across runs."""
+    model = _model().eval()
+    prompt = _ids(t=3, b=2)
+    kw = dict(do_sample=True, temperature=0.9, top_k=10, top_p=0.9)
+    a = model.generate(
+        prompt, max_new_tokens=5, generator=torch.Generator().manual_seed(11), **kw
+    )
+    b = model.generate(
+        prompt, max_new_tokens=5, generator=torch.Generator().manual_seed(11), **kw
+    )
+    assert torch.equal(a, b)
+
+
+def test_generate_greedy_default_ignores_filters() -> None:
+    """do_sample=False stays pure greedy: top_k/top_p must not change it."""
+    model = _model().eval()
+    prompt = _ids(t=3, b=1)
+    plain = model.generate(prompt, max_new_tokens=5)
+    filtered = model.generate(prompt, max_new_tokens=5, top_k=3, top_p=0.5)
+    assert torch.equal(plain, filtered)
+
+
+def test_generate_sampled_output_is_valid() -> None:
+    """Sampled generation keeps the prompt and emits in-vocab ids."""
+    model = _model().eval()
+    prompt = _ids(t=3, b=B)
+    out = model.generate(
+        prompt,
+        max_new_tokens=5,
+        do_sample=True,
+        top_k=7,
+        top_p=0.95,
+        generator=torch.Generator().manual_seed(3),
+    )
+    assert out.shape == (B, 8)
+    assert torch.equal(out[:, :3], prompt)
+    assert (out >= 0).all() and (out < VOCAB).all()

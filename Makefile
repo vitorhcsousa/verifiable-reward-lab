@@ -16,7 +16,7 @@ format: ## Format code with ruff
 	uv run ruff format src/ tests/
 	uv run ruff check --fix src/ tests/
 
-check: lint type ## Run all checks (lint + type)
+check: lint type test ## Run all checks (lint + type + tests)
 
 test: ## Run tests
 	uv run pytest
