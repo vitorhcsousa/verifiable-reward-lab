@@ -37,6 +37,13 @@ def time_once(
 
 def main() -> None:
     model, prompt = build()
+    # sanity: cache must not change greedy output
+    ids_nc = model.generate(prompt, max_new_tokens=64, do_sample=False, use_cache=False)
+    ids_c = model.generate(prompt, max_new_tokens=64, do_sample=False, use_cache=True)
+    assert torch.equal(ids_nc, ids_c), (
+        "cache != no-cache in greedy — bug, not benchmark"
+    )
+
     print("| n_new | use_cache | median tok/s | min-max |")
     print("|---|---|---|---|")
 
