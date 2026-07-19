@@ -43,10 +43,10 @@ def main() -> None:
     for n_new in NEW_TOKENS:
         for use_cache in (False, True):
             time_once(model, prompt, n_new, use_cache)
-            rates = [time_once(model, prompt, n_new, use_cache)]
+            rates = [time_once(model, prompt, n_new, use_cache) for _ in range(N_RUNS)]
+            med = statistics.median(rates)
             print(
-                f"| {n_new} | {use_cache} | {statistics.median(rates):.1f} | "
-                f"{min(rates):.1f}-{max(rates):.1f} |"
+                f"| {n_new} | {use_cache} | {med:.1f} | {min(rates):.1f}-{max(rates):.1f} |"
             )
 
 
