@@ -109,13 +109,13 @@ Each phase ships with long-form articles documenting the math and the code:
 - **Part 3** · [Building a Transformer: The Complete Forward Pass](https://www.vitorsousa.com/foundations/building-a-transformer/) — norms, residuals, FFN, and the assembled decoder
 - _Part 4: Training a Transformer — ships with Phase 2_
 
-## Perfomance
+## performance
 
-Tokens/s with vs without the KV-cache- greedy decoding, batch 1,16-token prompt.
+Tokens/s with vs without the KV-cache — greedy decoding, batch 1, 16-token prompt.
 
-`d_model=256` 4 Layers, 4 Heads, vocab=1000, RoPE, float32, CPU
+`d_model=256`, 4 layers, 4 heads, vocab 1000, RoPE, float32, CPU, seed 0.
 
-Median of 5 runs(1 warmup excluded):
+Median of 5 runs (1 warmup excluded):
 
 | n_new | use_cache | median tok/s |    min-max    |
 | :---: | :-------: | :----------: | :-----------: |
@@ -124,14 +124,7 @@ Median of 5 runs(1 warmup excluded):
 |  256  |   False   |    185.2     | 175.3 - 185.7 |
 |  256  |   True    |    699.5     | 683.7 - 707.2 |
 
-Without the cache every step re-processes the whole sequence, so pergeneration cost.
-
-grow as $$$O(T^2)$$- doubling `n_new` costs 42% of throughput. WIth the cache each step.
-Processes one token step.
-
-Processes one token against cached K/V (O(T)), costing only 14%. The speedup widens.
-
-from 2.6x at 128tokens to 3.8x at 256, and keeps growing wit context length.
+Without the cache every step re-processes the whole sequence, so per-generation cost grows as O(T²) — doubling `n_new` costs 42% of throughput. With the cache each step processes one token against cached K/V, O(T) — the same doubling costs only 14%. The speedup widens from 2.6× at 128 tokens to 3.8× at 256, and keeps growing with context length.
 
 Reproduce: `uv run python benchmarks/bench_kv_cache.py`
 
