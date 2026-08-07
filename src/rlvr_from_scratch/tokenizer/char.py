@@ -1,156 +1,162 @@
-"""Character-level tokenizer.
+"""
+Character-level tokenizer. One token per character, no merges, no subword
+vocabulary, nothing outside the standard library.
 
-The smallest honest tokenizer: one token per character, no merges, no subword
-vocabulary, no dependencies beyond the standard library.
+No torch in here on purpose. encode returns a plain list[int] and the tensor
+conversion happens one layer up in the data package, which keeps this file
+readable on its own and its tests free of a torch import.
 
-Torch deliberately never enters this module. ``encode`` produces a plain
-``list[int]`` and the conversion to tensors happens one layer up, in the data
-package. That boundary keeps this file reasonable on its own and keeps its
-tests free of any torch import.
-
-Scope note for Cycle 3: a character vocabulary makes the training loop the
-object of study rather than the tokenizer. BPE is a separate piece, later, if
-it earns its place.
+A char vocab is the boring choice, which is the point for Cycle 3: it makes the
+training loop the object of study instead of the tokenizer. BPE later, if it
+earns it.
 """
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 from pathlib import Path
 
+# bumped only if the meaning of an existing field changes, not when one is added
+_FORMAT_VERSION = 1
+
 
 class CharTokenizer:
-    """Maps single characters to contiguous integer ids and back.
+    """
+    Characters to ints and back.
 
-    Vocabulary order is authoritative: a character's index in ``itos`` is the
-    row it will occupy in the model's embedding table. Because of that,
-    ``__init__`` preserves the order it is given rather than canonicalising it.
-    Sorting happens in exactly one place — ``from_text`` — and ``load`` must
-    reproduce a saved order verbatim, since re-sorting would silently remap
-    every id a checkpoint was trained with.
-
-    Attributes:
-        itos: The vocabulary in id order. Index ``i`` holds the character
-            encoded as id ``i``. Immutable, so it cannot desync from the
-            reverse mapping built alongside it.
-
-    Example:
-        >>> tok = CharTokenizer.from_text("hello")
-        >>> tok.vocab_size
-        4
-        >>> tok.decode(tok.encode("hell"))
-        'hell'
+    The vocab is a tuple of characters and a character's index in it is the row
+    it gets in the embedding table, so the *order* is the entire contract. It is
+    sorted in exactly one place (from_text) and passed through untouched
+    everywhere else.
     """
 
     def __init__(self, chars: Sequence[str]) -> None:
-        """Build a tokenizer over an explicit, ordered vocabulary.
+        # chars is the vocab already in id order. a plain str works and iterates
+        # character-wise, so CharTokenizer("abc") is fine.
+        if len(chars) == 0:
+            msg = "vocabulary must not be empty"
+            raise ValueError(msg)
 
-        Args:
-            chars: The vocabulary, in the exact id order to use. Each element
-                must be a single character and the sequence must contain no
-                duplicates. A plain ``str`` is accepted and iterates
-                character-wise, so ``CharTokenizer("abc")`` is valid.
+        multi_char = [e for e in chars if len(e) != 1]
+        if multi_char:
+            msg = f"vocabulary must only contain single characters, got {multi_char!r}"
+            raise ValueError(msg)
 
-        Raises:
-            ValueError: If ``chars`` is empty, contains an element that is not
-                exactly one character, or contains duplicates. Duplicates are
-                fatal rather than deduplicated: silently collapsing them would
-                leave ``vocab_size`` reporting the longer count and size the
-                embedding table wrongly, with no error until much later.
-        """
-        # 1. Reject the empty vocabulary. A tokenizer with nothing in it is a
-        #    bug at the call site, not a degenerate-but-valid object.
-        if len(chars)
+        # dupes raise instead of getting deduped. silently collapsing them leaves
+        # vocab_size overcounting, which sizes the embedding table wrong and
+        # doesn't complain until much later.
+        if len(chars) != len(set(chars)):
+            msg = "vocabulary cannot contain duplicated elements"
+            raise ValueError(msg)
 
-        # 2. Reject any element whose length is not exactly 1. This is what
-        #    makes the "char" in CharTokenizer true, and it catches the
-        #    ["ab", "c"] mistake at construction rather than at decode time.
-
-        # 3. Reject duplicates: compare len(chars) against len(set(chars)).
-        #    Put BOTH numbers in the message — "65 chars, 64 unique" tells you
-        #    how bad it is and roughly where to look; "duplicate found" does not.
-
-        # 4. Store the vocabulary as a tuple. Immutability is the whole point:
-        #    a list could be mutated by a caller after construction and go
-        #    silently out of sync with the dict built in step 5.
-
-        # 5. Build the char -> id dict from your OWN stored tuple, not from the
-        #    `chars` argument. Building from the stored copy means the two
-        #    structures cannot disagree even if `chars` was a one-shot iterator
-        #    or some lazy sequence that behaves differently on second read.
-
-        raise NotImplementedError
+        self._itos = tuple(chars)
+        self._stoi = {c: i for i, c in enumerate(chars)}
 
     @property
     def itos(self) -> tuple[str, ...]:
-        """The vocabulary in id order.
-
-        Returns:
-            The characters as an immutable tuple, where index ``i`` is the
-            character with id ``i``.
-        """
-        # 1. Return the stored tuple directly. No defensive copy is needed —
-        #    tuples are immutable, so handing this out cannot corrupt state.
-
-        raise NotImplementedError
+        """The vocab in id order. Index i is the character with id i."""
+        return self._itos
 
     @property
     def vocab_size(self) -> int:
-        """Number of distinct characters this tokenizer knows.
-
-        This is the value to pass as the model's embedding-table size and as
-        the output width of the language-model head.
-
-        Returns:
-            The vocabulary size, always >= 1.
-        """
-        # 1. Derive it from the length of the stored vocabulary tuple. Never
-        #    store a separate count — a cached number is a number that can
-        #    drift from the thing it counts.
-
-        raise NotImplementedError
+        """Size of the embedding table and the width of the lm head."""
+        return len(self._itos)
 
     @classmethod
     def from_text(cls, text: str) -> CharTokenizer:
-        """Derive a vocabulary from a corpus.
+        """Vocab = the sorted set of characters in text."""
+        # the sort matters. set iteration order for strings depends on the hash
+        # seed, so without it the vocab differs run to run and a checkpoint
+        # trained on Monday decodes to noise on Tuesday, with nothing in the loss
+        # curve to hint at why.
+        return cls(sorted(set(text)))
 
-        This is the only place sorting happens, and the sort is load-bearing:
-        ``set`` iteration order for strings depends on the process hash seed,
-        so an unsorted vocabulary would differ between runs. A checkpoint
-        trained on Monday would decode to noise on Tuesday, with nothing in the
-        loss curve to suggest anything was wrong.
+    def encode(self, s: str) -> list[int]:
+        """Text to ids. One id per character, so len(out) == len(s), always."""
+        encoded: list[int] = []
+        for idx, char in enumerate(s):
+            try:
+                encoded.append(self._stoi[char])
+            except KeyError:
+                # no <unk> to fall back on. a tokenizer built by from_text over
+                # the training corpus has seen every character it will ever need,
+                # so an unknown one means we're encoding text the model never saw.
+                # better to say so here than to map it somewhere arbitrary and
+                # wonder later why samples got worse.
+                msg = f"character {char!r} at index {idx} is not in the vocabulary"
+                raise ValueError(msg) from None
+        return encoded
 
-        Args:
-            text: The corpus to derive the vocabulary from. Every distinct
-                character appearing in it becomes a token.
+    def decode(self, ids: Sequence[int]) -> str:
+        """Ids back to text. decode(encode(s)) == s for anything the vocab covers."""
+        # takes any Sequence[int], so a list from encode or a .tolist() off a
+        # tensor both work. not a tensor itself, which is how torch stays out.
+        chars: list[str] = []
+        for idx, i in enumerate(ids):
+            # the range check is here mostly for negatives: itos[-1] happily
+            # returns the last character instead of raising, so an off-by-one or
+            # a -1 pad token decodes to something plausible and only shows up as
+            # mysteriously bad samples days later.
+            if not 0 <= i < self.vocab_size:
+                msg = f"id {id} at index {idx} is outside the vocabulary of size {self.vocab_size}"
+                raise ValueError(msg)
+            chars.append(self._itos[i])
+        return "".join(chars)
 
-        Returns:
-            A tokenizer whose vocabulary is the sorted set of characters in
-            ``text``.
-
-        Raises:
-            ValueError: If ``text`` is empty, propagated from ``__init__``.
-
-        Example:
-            >>> CharTokenizer.from_text("banana").itos
-            ('a', 'b', 'n')
-        """
-        # 1. Take the set of characters in `text`, sort it, hand it to cls().
-        #    One line. Resist adding knobs here — min frequency, max vocab
-        #    size, special tokens. This box is deliberately the smallest honest
-        #    version, and every knob is another thing that needs a test.
-
-        raise NotImplementedError
-
-    # ------------------------------------------------------------------
-    # Next chunk — leave these alone until the trio above is green.
-    # ------------------------------------------------------------------
-
-    def encode(self, s: str) -> list[int]: ...
-
-    def decode(self, ids: Sequence[int]) -> str: ...
-
-    def save(self, path: Path) -> None: ...
+    def save(self, path: Path) -> None:
+        """Write the vocab to path as json. Parent directory must exist."""
+        # only itos goes out. stoi is derived, and writing it too would put the
+        # same fact on disk twice with the option of disagreeing with itself.
+        # ensure_ascii=False keeps non-ascii readable instead of \uXXXX soup.
+        payload = {"version": _FORMAT_VERSION, "itos": list(self._itos)}
+        path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
 
     @classmethod
-    def load(cls, path: Path) -> CharTokenizer: ...
+    def load(cls, path: Path) -> CharTokenizer:
+        """Read back a vocab written by save, in exactly the order it was saved."""
+        raw = path.read_text(encoding="utf-8")
+
+        # everything below is checked rather than trusted. the alternative
+        # failure is a KeyError or a wrong-shaped embedding table thousands of
+        # lines from the malformed file that caused it.
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            msg = f"{path} is not valid JSON: {exc}"
+            raise ValueError(msg) from exc
+
+        if not isinstance(payload, dict):
+            msg = f"{path} must contain a JSON object, got {type(payload).__name__}"
+            raise ValueError(msg)
+
+        missing = {"version", "itos"} - payload.keys()
+        if missing:
+            msg = f"{path} is missing required key(s): {sorted(missing)}"
+            raise ValueError(msg)
+
+        version = payload["version"]
+        if version != _FORMAT_VERSION:
+            msg = (
+                f"{path} has format version {version!r}, "
+                f"but this code reads version {_FORMAT_VERSION}"
+            )
+            raise ValueError(msg)
+
+        itos = payload["itos"]
+        if not isinstance(itos, list):
+            msg = f"{path} has an 'itos' that is not a list, got {type(itos).__name__}"
+            raise ValueError(msg)
+
+        non_str = [e for e in itos if not isinstance(e, str)]
+        if non_str:
+            msg = f"{path} has non-string entries in 'itos': {non_str!r}"
+            raise ValueError(msg)
+
+        # order goes through untouched. re-deriving or re-sorting it here would
+        # remap every id in the checkpoint at once and nothing would raise; the
+        # model would just generate confident nonsense.
+        return cls(itos)

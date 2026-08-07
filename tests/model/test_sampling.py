@@ -36,7 +36,7 @@ def test_greedy_equals_argmax(logits: torch.Tensor) -> None:
     out = sample(logits, temperature=0.0)
     expected = logits.argmax(dim=-1, keepdim=True)
     assert torch.equal(out, expected)
-    assert torch.isfinite(logits).all()          # τ=0 must hit argmax, never logits/0
+    assert torch.isfinite(logits).all()  # τ=0 must hit argmax, never logits/0
     assert (out >= 0).all() and (out < V).all()  # valid token ids
 
 
