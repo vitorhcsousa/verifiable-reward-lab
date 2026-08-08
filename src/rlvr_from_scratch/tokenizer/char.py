@@ -14,6 +14,7 @@ earns it.
 from __future__ import annotations
 
 import json
+from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -46,12 +47,22 @@ class CharTokenizer:
         # dupes raise instead of getting deduped. silently collapsing them leaves
         # vocab_size overcounting, which sizes the embedding table wrong and
         # doesn't complain until much later.
+        # both counts go in the message. "65 chars, 64 unique" tells you how bad
+        # it is and roughly where to look; "duplicate found" does not.
         if len(chars) != len(set(chars)):
-            msg = "vocabulary cannot contain duplicated elements"
+            repeated = sorted(c for c, n in Counter(chars).items() if n > 1)
+            msg = (
+                f"vocabulary cannot contain duplicated elements: "
+                f"{len(chars)} chars, {len(set(chars))} unique, "
+                f"repeated {repeated!r}"
+            )
             raise ValueError(msg)
 
         self._itos = tuple(chars)
-        self._stoi = {c: i for i, c in enumerate(chars)}
+        # built from the stored tuple, not from `chars`. building from the
+        # argument means the two structures can disagree if `chars` was a
+        # one-shot iterable or a lazy sequence that reads differently twice.
+        self._stoi = {c: i for i, c in enumerate(self._itos)}
 
     @property
     def itos(self) -> tuple[str, ...]:
@@ -99,7 +110,10 @@ class CharTokenizer:
             # a -1 pad token decodes to something plausible and only shows up as
             # mysteriously bad samples days later.
             if not 0 <= i < self.vocab_size:
-                msg = f"id {id} at index {idx} is outside the vocabulary of size {self.vocab_size}"
+                msg = (
+                    f"id {i} at index {idx} is outside the "
+                    f"vocabulary of size {self.vocab_size}"
+                )
                 raise ValueError(msg)
             chars.append(self._itos[i])
         return "".join(chars)
