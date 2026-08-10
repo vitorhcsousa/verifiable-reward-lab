@@ -215,5 +215,5 @@ CLAUDE.md
 .DS_Store
 
 # corpus — baixado localmente, não versionado
-data/
-runs/
+/data/
+/runs/
