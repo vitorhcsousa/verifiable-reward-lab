@@ -91,9 +91,10 @@ class Corpus:
             return self.train
         if split == "val":
             return self.val
-        else:
-            msg = f"The split value {split} is not on of the allowed values ['split','val']."
-            raise ValueError(msg)
+        msg = (
+            f"unknown split {split!r}; expected 'train' or 'val'"
+        )
+        raise ValueError(msg)
 
 
 def load_corpus(path: Path, *, train_frac: float = 0.9) -> Corpus:
@@ -110,21 +111,29 @@ def load_corpus(path: Path, *, train_frac: float = 0.9) -> Corpus:
         ValueError: if train_frac is outside (0, 1), or the corpus is too
             small for the split to leave both sides non-empty.
     """
-    # ── 1 ─ validate train_frac BEFORE reading anything ───────────────
-    #   if not 0.0 < train_frac < 1.0: raise ValueError(...)
-    #   Both ends are exclusive: 0.0 means no training data, 1.0 means no
-    #   validation data. Neither is a split. Put the received value in the
-    #   message with !r — "must be in (0, 1)" alone makes the caller go
-    #   looking for what they actually passed.
     if not 0.0 < train_frac < 1.0:
-        msg = f"The value of train_frac must be in (0,1), got {train_frac}"
+        msg = f"train_frac must be in (0, 1), got {train_frac!r}"
         raise ValueError(msg)
+
     text = path.read_text(encoding="utf-8")
     tokenizer = CharTokenizer.from_text(text)
 
     ids = torch.tensor(tokenizer.encode(text), dtype=torch.long)
     n = int(train_frac * len(ids))
     train, val = ids[:n], ids[n:]
+
+    # A legal train_frac can still produce an unusable split on a short
+    # corpus: 12 chars at 0.9 leaves val with 2 tokens. Nothing fails here
+    # — it fails later inside get_batch, in a message that mentions neither
+    # this file nor train_frac. Catch it while the cause is still in scope.
+    if len(train) == 0 or len(val) == 0:
+        msg = (
+            f"corpus of {len(ids)} tokens is too small to split at "
+            f"train_frac={train_frac!r}: got {len(train)} train "
+            f"and {len(val)} val"
+        )
+        raise ValueError(msg)
+
     return Corpus(train=train, val=val, tokenizer=tokenizer)
 
 
@@ -156,7 +165,10 @@ def get_batch(
     data = corpus.split(split)
     hi = len(data) - block_size - 1
     if hi < 1:
-        msg = "There is no enough data to generated the batchs."
+        msg = (
+            f"block_size {block_size} is too large for split {split!r} "
+            f"of length {len(data)}: a window needs block_size + 1 tokens"
+        )
         raise ValueError(msg)
     ix = torch.randint(0, hi, (batch_size,), generator=generator)
     x = torch.stack([data[i : i + block_size] for i in ix])

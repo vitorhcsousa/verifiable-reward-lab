@@ -91,10 +91,57 @@ def test_rejects_degenerate_train_frac(corpus_path: Path) -> None:
             load_corpus(corpus_path, train_frac=bad)
 
 
+def test_rejects_corpus_that_splits_to_nothing(tmp_path: Path) -> None:
+    """A legal train_frac can still produce an empty side.
+
+    3 characters at train_frac=0.1 gives n = int(0.3) = 0: train is empty
+    and the Corpus is unusable. Nothing about that is visible until a
+    batch is requested, so the error belongs here, where train_frac is
+    still in scope.
+    """
+    path = tmp_path / "too_small.txt"
+    path.write_text("abc", encoding="utf-8")
+    with pytest.raises(ValueError, match="too small"):
+        load_corpus(path, train_frac=0.1)
+
+
+def test_short_but_non_empty_split_fails_with_a_useful_message(
+    tmp_path: Path,
+) -> None:
+    """The case load_corpus deliberately does NOT catch.
+
+    12 characters at 0.99 leaves val with 1 token: a legal split, just too
+    short for any real block_size. load_corpus cannot know that — it never
+    sees block_size — so the error correctly arrives later, from get_batch.
+    What matters is that it names the three facts you need: which
+    block_size, which split, and how long that split actually was.
+    """
+    path = tmp_path / "short_val.txt"
+    path.write_text("abcdefghijkl", encoding="utf-8")
+    small = load_corpus(path, train_frac=0.99)  # must NOT raise
+
+    with pytest.raises(ValueError) as excinfo:
+        get_batch(small, "val", batch_size=1, block_size=T, generator=_gen(0))
+    message = str(excinfo.value)
+    assert str(T) in message  # the block_size asked for
+    assert "val" in message  # which split
+    assert str(len(small.val)) in message  # how long it was
+
+
 def test_split_rejects_unknown_name(corpus: Corpus) -> None:
     # Must raise, not quietly fall back to train.
     with pytest.raises((ValueError, KeyError)):
         corpus.split("test")  # type: ignore[arg-type]
+
+
+def test_unknown_split_message_names_the_legal_values(corpus: Corpus) -> None:
+    # The message has to point somewhere useful: a reader who follows it
+    # must end up with a working call, not a second copy of this error.
+    with pytest.raises(ValueError) as excinfo:
+        corpus.split("valid")  # type: ignore[arg-type]
+    message = str(excinfo.value)
+    assert "'valid'" in message  # what was passed
+    assert "train" in message and "val" in message  # what is accepted
 
 
 # =========================================================================
