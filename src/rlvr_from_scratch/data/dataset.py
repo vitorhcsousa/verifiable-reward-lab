@@ -87,16 +87,13 @@ class Corpus:
         Raises:
             ValueError: on any other name.
         """
-        # ── 1 ─ the two known names ───────────────────────────────────
-        #   if split == "train": return self.train
-        #   if split == "val":   return self.val
-        #
-        # ── 2 ─ anything else raises ──────────────────────────────────
-        #   Do NOT fall through to train. A typo ("valid", "test") would
-        #   then evaluate on training data and report a val loss that is
-        #   just a second train loss — the most flattering bug there is.
-        #   Name the bad value AND the legal ones in the message.
-        raise NotImplementedError("step 1-2 — see the plan above")
+        if split == "train":
+            return self.train
+        if split == "val":
+            return self.val
+        else:
+            msg = f"The split value {split} is not on of the allowed values ['split','val']."
+            raise ValueError(msg)
 
 
 def load_corpus(path: Path, *, train_frac: float = 0.9) -> Corpus:
@@ -119,41 +116,16 @@ def load_corpus(path: Path, *, train_frac: float = 0.9) -> Corpus:
     #   validation data. Neither is a split. Put the received value in the
     #   message with !r — "must be in (0, 1)" alone makes the caller go
     #   looking for what they actually passed.
-    #
-    # ── 2 ─ read the text ─────────────────────────────────────────────
-    #   text = path.read_text(encoding="utf-8")
-    #   Pass encoding explicitly. The default is platform-dependent, so a
-    #   corpus that loads on your Mac can fail in CI, and the failure
-    #   arrives as a UnicodeDecodeError with no mention of this line.
-    #
-    # ── 3 ─ build the vocab from the corpus ───────────────────────────
-    #   tokenizer = CharTokenizer.from_text(text)
-    #   from_text is the ONLY place a vocab gets sorted. Everything
-    #   downstream passes the order through untouched — that is the
-    #   contract you tested last week.
-    #
-    # ── 4 ─ encode once, into one tensor ──────────────────────────────
-    #   ids = torch.tensor(tokenizer.encode(text), dtype=torch.long)
-    #   Once, not per batch. Encoding is pure Python; doing it inside the
-    #   training loop would dominate the step time on CPU.
-    #   dtype=long is required: embedding lookups index with int64, and
-    #   the default float dtype fails with a message about "expected
-    #   scalar type Long" far from here.
-    #
-    # ── 5 ─ split BY POSITION ─────────────────────────────────────────
-    #   n = int(train_frac * len(ids))
-    #   train, val = ids[:n], ids[n:]
-    #   A slice, not a shuffle. Sampling windows out of a shuffled corpus
-    #   puts validation text inside training context: val loss drops, the
-    #   model has not improved, and the curve gives you no hint at all.
-    #
-    # ── 6 ─ guard the degenerate split ────────────────────────────────
-    #   A corpus of 5 chars with train_frac=0.9 gives n=4 and a val of 1
-    #   token — legal here, useless later, and get_batch would fail with a
-    #   message naming neither the corpus nor train_frac. Raise now.
-    #
-    # ── 7 ─ return Corpus(train=..., val=..., tokenizer=...) ──────────
-    raise NotImplementedError("step 1-7 — see the plan above")
+    if not 0.0 < train_frac < 1.0:
+        msg = f"The value of train_frac must be in (0,1), got {train_frac}"
+        raise ValueError(msg)
+    text = path.read_text(encoding="utf-8")
+    tokenizer = CharTokenizer.from_text(text)
+
+    ids = torch.tensor(tokenizer.encode(text), dtype=torch.long)
+    n = int(train_frac * len(ids))
+    train, val = ids[:n], ids[n:]
+    return Corpus(train=train, val=val, tokenizer=tokenizer)
 
 
 def get_batch(
@@ -185,7 +157,7 @@ def get_batch(
     #   data = corpus.split(split)
     #   Go through Corpus.split, do not reach into corpus.train directly.
     #   One gate means one place where "val" can be got wrong.
-    #
+
     # ── 2 ─ the upper bound on a start index ──────────────────────────
     #   hi = len(data) - block_size - 1
     #
