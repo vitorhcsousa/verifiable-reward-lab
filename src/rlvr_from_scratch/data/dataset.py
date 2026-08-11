@@ -153,52 +153,12 @@ def get_batch(
         ValueError: if block_size leaves no room for a full window in the
             chosen split.
     """
-    # ── 1 ─ pick the tensor ───────────────────────────────────────────
-    #   data = corpus.split(split)
-    #   Go through Corpus.split, do not reach into corpus.train directly.
-    #   One gate means one place where "val" can be got wrong.
-
-    # ── 2 ─ the upper bound on a start index ──────────────────────────
-    #   hi = len(data) - block_size - 1
-    #
-    #   Where the -1 comes from: a window consumes T+1 tokens, T for x and
-    #   one more for the final target. With randint(0, hi) the largest
-    #   start is hi-1, so the last index y touches is
-    #       (hi - 1) + block_size = len(data) - 2
-    #   which is in bounds. Drop the -1 and the largest start makes y run
-    #   off the end. torch does NOT raise: slicing past the end returns a
-    #   SHORT tensor, and you get a torch.stack shape error instead —
-    #   on roughly 0.1% of batches. Green today, mystifying in November.
-    #
-    #   Do not trust the paragraph you just read. Change the -1 to +1 and
-    #   watch test_never_reads_past_the_end_of_the_split go red; that test
-    #   exists because this exact mutation slipped through an earlier
-    #   version of the suite.
-    #
-    # ── 3 ─ guard before sampling ─────────────────────────────────────
-    #   if hi < 1: raise ValueError(...)
-    #   torch.randint with an empty range reports a problem that names
-    #   neither block_size nor which split was too short. Say both.
-    #
-    # ── 4 ─ draw the start indices ────────────────────────────────────
-    #   ix = torch.randint(0, hi, (batch_size,), generator=generator)
-    #
-    #   Pass the generator. Without it torch uses the global RNG, and then
-    #   reproducibility is a property of the process rather than of this
-    #   function: a stray torch.manual_seed() in an unrelated file starts
-    #   changing your batches, and two runs with "the same seed" diverge.
-    #   Sampling WITH replacement is fine — repeated windows in one batch
-    #   are harmless at this scale.
-    #
-    # ── 5 ─ stack the windows ─────────────────────────────────────────
-    #   x = torch.stack([data[i     : i + block_size    ] for i in ix])
-    #   y = torch.stack([data[i + 1 : i + 1 + block_size] for i in ix])
-    #
-    #   Build y from `data`, not from `x`. Deriving it from x (rolling,
-    #   or concatenating a token onto a slice of x) makes the two
-    #   self-consistent by construction, which passes a naive shift test
-    #   while neither of them is a real window of the corpus.
-    #
-    # ── 6 ─ return (x, y) ─────────────────────────────────────────────
-    #   Both (B, T), dtype long, ready for the loss you write on Tuesday.
-    raise NotImplementedError("step 1-6 — see the plan above")
+    data = corpus.split(split)
+    hi = len(data) - block_size - 1
+    if hi < 1:
+        msg = "There is no enough data to generated the batchs."
+        raise ValueError(msg)
+    ix = torch.randint(0, hi, (batch_size,), generator=generator)
+    x = torch.stack([data[i : i + block_size] for i in ix])
+    y = torch.stack([data[i + 1 : i + 1 + block_size] for i in ix])
+    return (x, y)
