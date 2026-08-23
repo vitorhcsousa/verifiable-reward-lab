@@ -4,34 +4,26 @@
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**From transformer internals to RLVR alignment in one codebase.**
+**A decoder-only language model, built from raw tensors.**
 
-The full pipeline, equation by equation, one file per concept:
+Attention through to a model that trains — one file per concept, every component
+shape-, numerical- and gradient-tested. Single GPU, small models, pure PyTorch:
+no `trl`, no `accelerate` magic.
 
-```text
-transformer  →  pretraining  →  SFT     →  GRPO      →  GDPO
-attention       AdamW +         GSM8K      group        multi-
-RoPE            cosine          baseline   rollouts     reward
-RMSNorm         warmup                     + reward     fix
-```
-
-Single GPU, 10M–50M params, results in hours. No `trl`, no `accelerate` magic. Pure PyTorch.
-
-nanoGPT showed you can pretrain in one file. This shows you can align in one file too.
+In the spirit of nanoGPT: small enough to read end to end, tested enough to trust.
 
 ## status
 
-| #   | Phase                 | Deliverable                                 | Status      |
-| --- | --------------------- | ------------------------------------------- | ----------- |
-| 1   | Transformer internals | decoder model + KV-cache + sampling + tests | ✅ complete |
-| 2   | Pretraining           | 50M model on TinyStories                    | ⏸ parked    |
-| 3   | SFT                   | GSM8K fine-tune baseline                    | ⏸ planned   |
-| 4   | **GRPO** _(flagship)_ | training run + ablations                    | ⏸ planned   |
-| 5   | GDPO                  | multi-reward fix                            | ⏸ planned   |
+**Built and tested.** The complete decoder-only transformer: scaled dot-product
+and multi-head attention, RoPE / sinusoidal / learned / ALiBi positional
+encodings, RMSNorm and LayerNorm, SwiGLU and GELU feed-forward, pre- and
+post-norm blocks, an incremental **KV-cache that matches the full forward pass at
+`atol=1e-5`**, and **greedy / temperature / top-k / top-p sampling** — 112 tests
+across the model layer.
 
-Phase 1 ships a complete decoder-only transformer: attention with RoPE, RMSNorm/LayerNorm, SwiGLU/GELU FFN, incremental **KV-cache that matches the full forward pass at `atol=1e-5`**, and **greedy / temperature / top-k / top-p sampling** — all shape-, numerical- and gradient-tested (112 tests).
-
-> Next up is not automatically Phase 2. The active plan is: Transformer Internals (done) → Research Engineering Core → Eval / Verifiable System + Failure Analysis. Later phases of this repo open when the plan's checkpoint chooses them.
+**In progress.** The training path: a character-level tokenizer, corpus fetching,
+encoding and batching, and token-level cross-entropy are in place with their own
+test suites. The training loop itself is being written.
 
 ## quickstart
 
@@ -39,10 +31,15 @@ Phase 1 ships a complete decoder-only transformer: attention with RoPE, RMSNorm/
 git clone https://github.com/vitorhcsousa/rlvr-from-scratch.git
 cd rlvr-from-scratch
 uv sync --group dev
+make data    # download + checksum-verify the training corpus
 make check   # ruff + ty + pytest
 ```
 
-Generate with a (randomly initialized — pretraining is Phase 2) model:
+The corpus is not versioned. `make data` fetches it from a pinned URL and
+verifies a sha256 recorded in `src/rlvr_from_scratch/data/fetch.py`, failing
+loudly if the bytes differ. It is idempotent — safe to re-run.
+
+Generate with a randomly initialized model (the training loop is in progress):
 
 ```python
 import torch
@@ -74,25 +71,25 @@ Decoding lives in one pure function — [`model/sampling.py`](src/rlvr_from_scra
 
 - **Shapes** for every component (attention, MHA, RoPE/sinusoidal, norms, FFN, block, model).
 - **Numerics**: causality (future tokens never change past logits), centred finite-difference gradient checks end-to-end, pre/post-norm variants.
-- **KV-cache correctness**: incremental decoding ≡ full forward at `atol=1e-5` — the signature test of Phase 1.
+- **KV-cache correctness**: incremental decoding ≡ full forward at `atol=1e-5` — the signature correctness test of the model layer.
 - **Sampling acceptance**: greedy == argmax; `top_k=1` == greedy; `top_p=1.0` == full-softmax sampling; nucleus renormalizes with out-of-set probability exactly 0; seeded draws reproducible.
+- **Data path**: encode/decode round-trips, vocabulary ordering, the (x, y) shift, and a corpus checksum that fails loudly on the wrong bytes.
+- **Objective**: an untrained model scores exactly ln(V), the reduction is a mean, and one optimizer step provably decreases the loss.
 
 ## repo layout
 
 ```text
 src/rlvr_from_scratch/
 ├── model/          # attention, positional, norm, ffn, block, transformer, sampling
-├── tokenizer/      # BPE from scratch            (Phase 2)
-├── data/           # TinyStories, GSM8K          (Phase 2+)
-├── training/       # pretrain, sft, grpo, gdpo   (Phase 2+)
-├── rollout/        # batched generation          (Phase 4)
-├── rewards/        # verifiers, format, length   (Phase 4)
-└── evaluation/     # GSM8K eval, diagnostics     (Phase 3+)
+├── tokenizer/      # character-level tokenizer
+├── data/           # corpus fetch + checksum, encoding, batching
+└── training/       # loss functions (training loop in progress)
 ```
 
 ## development
 
 ```text
+make data       # download + verify the training corpus
 make check      # lint + type check + tests (what CI runs)
 make test       # tests only
 make test-cov   # tests with coverage
@@ -102,13 +99,13 @@ make ci         # full pipeline
 
 ## writing
 
-Each phase ships with long-form articles documenting the math and the code:
+Long-form articles documenting the math and the code:
 
 - **Part 1** · [Attention Is All You Need to Implement](https://www.vitorsousa.com/foundations/attention-from-scratch/) — scaled dot-product and multi-head attention
 - **Part 2** · [Positional Encoding: Teaching Transformers to Count](https://www.vitorsousa.com/foundations/positional-encoding/) — sinusoidal, learned, RoPE, ALiBi
 - **Part 3** · [Building a Transformer: The Complete Forward Pass](https://www.vitorsousa.com/foundations/building-a-transformer/) — norms, residuals, FFN, and the assembled decoder
-- _Part 4: Training a Transformer — ships with Phase 2_
-- **Phase 1 close-out** · [A Transformer from Raw Tensors: What 112 Tests Taught Me](https://www.vitorsousa.com/blog/transformer-from-raw-tensors/) — the three properties that fail silently, and the tests that pin them
+- _Part 4: Training a Transformer — in progress_
+- [A Transformer from Raw Tensors: What 112 Tests Taught Me](https://www.vitorsousa.com/blog/transformer-from-raw-tensors/) — the three properties that fail silently, and the tests that pin them
 
 ## performance
 
@@ -134,11 +131,8 @@ Reproduce: `uv run python benchmarks/bench_kv_cache.py`
 ## references
 
 - [Attention Is All You Need](https://arxiv.org/abs/1706.03762) (Vaswani et al., 2017)
+- [RoFormer: Enhanced Transformer with Rotary Position Embedding](https://arxiv.org/abs/2104.09864) (Su et al., 2021)
 - [The Curious Case of Neural Text Degeneration](https://arxiv.org/abs/1904.09751) (Holtzman et al., 2019)
-- [DeepSeek-R1](https://arxiv.org/abs/2501.12948) (DeepSeek, 2025)
-- [GDPO](https://arxiv.org/abs/2601.05242) (NVlabs, Jan 2026) · [reference implementation](https://github.com/NVlabs/GDPO)
-- [GSM8K](https://arxiv.org/abs/2110.14168) (Cobbe et al., 2021)
-- [TinyStories](https://arxiv.org/abs/2305.07759) (Eldan & Li, 2023)
 
 ## license
 
