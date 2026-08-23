@@ -1,4 +1,4 @@
-.PHONY: help install dev lint format check test test-cov type clean pre-commit ci
+.PHONY: help install dev data lint format check test test-cov type clean pre-commit ci
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -8,6 +8,9 @@ install: ## Install project dependencies
 
 dev: ## Install project with dev dependencies
 	uv sync --group dev
+
+data: ## Download and checksum-verify the training corpus
+	uv run python -m rlvr_from_scratch.data.fetch
 
 lint: ## Run ruff linter
 	uv run ruff check src/ tests/
