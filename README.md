@@ -161,10 +161,16 @@ not a universal constant, and it is meant to be validated on a second machine
 before being frozen. What must not happen is widening it later to rescue a
 reproduction that failed; that turns a test into a decoration.
 
-For scale: on one x86-64 Linux CPU the run takes about 80 seconds and ends at
-1.768 nats, and two runs of the same seed agreed to four decimal places. Wall
-clock on other hardware will differ — what must not differ is the two runs from
-one seed.
+Measured, same config and same seed on two machines:
+
+| | torch | wall clock | final val loss |
+| :-- | :-- | --: | --: |
+| Apple Silicon, macOS, CPU | 2.11.0 | 37 s | 1.7677 nats |
+| x86-64, Linux, CPU | 2.13.0 | 80 s | 1.7677 nats |
+
+Two runs on one machine agree exactly. The two machines — different architecture,
+different PyTorch build — agree to four decimal places, far inside the ±0.05
+tolerance. Wall clock on other hardware will differ; the loss should not.
 
 ## what's tested
 
