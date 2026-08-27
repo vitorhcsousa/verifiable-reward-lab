@@ -1,7 +1,7 @@
 [project]
 name = "rlvr-from-scratch"
 version = "0.1.0"
-description = "Add your description here"
+description = "A decoder-only transformer and its training loop, built from raw tensors, on the way to an RLVR study."
 readme = "README.md"
 authors = [
     { name = "vitorhcsousa", email = "vitorsousavhcs@outlook.com" }
@@ -19,16 +19,23 @@ dependencies = [
     "tqdm>=4.67.3",
 ]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
+[project.optional-dependencies]
+# Optional because a run must be reproducible without a tracking account:
+# metrics.jsonl and summary.json are the record, wandb is a view of it.
 tracking = [
     "wandb>=0.25.1",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[project.scripts]
+rlvr-train = "rlvr_from_scratch.cli:main"
+rlvr-compare = "rlvr_from_scratch.reproduce:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
     "lovely-tensors>=0.1.22",
     "marimo>=0.22.0",
     "plotly>=6.6.0",

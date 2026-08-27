@@ -1,0 +1,44 @@
+# The reference run: a clean clone plus this file reproduces the same
+# validation loss on CPU in a few minutes. Sized for that claim, nothing else.
+#
+#     uv run rlvr-train --config configs/tiny.yaml
+version: 1
+
+seed: 1337
+corpus: shakespeare
+
+batch_size: 32
+block_size: 64
+train_frac: 0.9
+
+model:
+  vocab_size: 65        # tinyshakespeare's character vocabulary
+  d_model: 128
+  n_layers: 4
+  n_heads: 4
+  d_ff: null            # derived from d_model by the FFN
+  max_seq_len: 128
+  positional: rope
+  norm: rmsnorm
+  ffn: swiglu
+  pre_norm: true
+  bias: false
+  tie_embeddings: true
+  rope_base: 10000.0
+  init_std: 0.02
+
+lr: 0.001               # small model, short run: higher than the 3e-4 default
+betas:
+  - 0.9
+  - 0.95
+weight_decay: 0.1
+grad_clip: 1.0
+
+max_steps: 600
+warmup_steps: 60
+min_lr_ratio: 0.1
+
+eval_interval: 100
+eval_iters: 20
+
+device: cpu             # the acceptance run is a CPU run, by construction

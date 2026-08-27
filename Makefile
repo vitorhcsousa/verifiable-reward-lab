@@ -1,4 +1,4 @@
-.PHONY: help install dev data lint format check test test-cov type clean pre-commit ci
+.PHONY: help install dev data train reference lint format check test test-cov type clean pre-commit ci
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -11,6 +11,14 @@ dev: ## Install project with dev dependencies
 
 data: ## Download and checksum-verify the training corpus
 	uv run python -m rlvr_from_scratch.data.fetch
+
+train: ## Run the reference training run (CPU, one command, no manual data step)
+	uv run rlvr-train --config configs/tiny.yaml
+
+reference: ## Run the reference config twice on one seed and check they agree
+	uv run rlvr-train --config configs/tiny.yaml --out runs/ref-a
+	uv run rlvr-train --config configs/tiny.yaml --out runs/ref-b
+	uv run rlvr-compare runs/ref-a runs/ref-b
 
 lint: ## Run ruff linter
 	uv run ruff check src/ tests/
