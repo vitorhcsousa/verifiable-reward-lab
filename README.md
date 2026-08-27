@@ -21,9 +21,15 @@ post-norm blocks, an incremental **KV-cache that matches the full forward pass a
 `atol=1e-5`**, and **greedy / temperature / top-k / top-p sampling** — 112 tests
 across the model layer.
 
-**In progress.** The training path: a character-level tokenizer, corpus fetching,
-encoding and batching, and token-level cross-entropy are in place with their own
-test suites. The training loop itself is being written.
+**Built and tested.** The training path: a character-level tokenizer, corpus
+fetching with a pinned checksum, encoding and batching, token-level
+cross-entropy, a frozen run config, and the training loop itself — warmup plus
+cosine schedule, decoupled weight decay, gradient clipping, deterministic
+evaluation, and a run directory that describes itself. One command reproduces
+the reference run on CPU.
+
+**Next.** The RLVR study: verifier, rollouts, GRPO, and the empirical work on
+GSM8K. `evaluation/`, `rewards/` and `rollout/` are placeholders until then.
 
 ## quickstart
 
@@ -38,6 +44,19 @@ make check   # ruff + ty + pytest
 The corpus is not versioned. `make data` fetches it from a pinned URL and
 verifies a sha256 recorded in `src/rlvr_from_scratch/data/fetch.py`, failing
 loudly if the bytes differ. It is idempotent — safe to re-run.
+
+Then train:
+
+```bash
+uv run rlvr-train --config configs/tiny.yaml
+```
+
+That is the whole run. It fetches and checksums its own corpus, so `make data`
+above is a convenience rather than a prerequisite; there is no notebook, no
+manual data step, and no flag that has to be remembered for the numbers to come
+out right. It writes `runs/tiny/` containing `config.yaml`, `tokenizer.json`,
+`metrics.jsonl`, `summary.json` and `ckpt.pt` — the config beside the metrics is
+the run that actually happened, overrides included.
 
 Generate with a randomly initialized model (the training loop is in progress):
 
@@ -67,6 +86,34 @@ sampled = model.generate(
 
 Decoding lives in one pure function — [`model/sampling.py`](src/rlvr_from_scratch/model/sampling.py) — applied on logits, with the nucleus off-by-one handled and tested (`python -m rlvr_from_scratch.model.sampling` runs a tiny demo).
 
+## reproducibility
+
+The claim this repository makes about itself, stated so it can be checked:
+
+| | |
+|---|---|
+| Clean clone | `git clone` + `uv sync` — no hidden local state |
+| One command | `uv run rlvr-train --config configs/tiny.yaml` |
+| Data | fetched from a pinned URL, sha256-verified, never fetched by hand |
+| Hardware | the reference run is a **CPU** run |
+| Tolerance | the same seed reproduces the final validation loss within **±0.05 nats** |
+
+Check the last one:
+
+```bash
+make reference   # runs configs/tiny.yaml twice and compares the two summaries
+```
+
+The tolerance is a property of this run — model size, step count, hardware —
+not a universal constant, and it is meant to be validated on a second machine
+before being frozen. What must not happen is widening it later to rescue a
+reproduction that failed; that turns a test into a decoration.
+
+For scale: on one x86-64 Linux CPU the run takes about 80 seconds and ends at
+1.768 nats, and two runs of the same seed agreed to four decimal places. Wall
+clock on other hardware will differ — what must not differ is the two runs from
+one seed.
+
 ## what's tested
 
 - **Shapes** for every component (attention, MHA, RoPE/sinusoidal, norms, FFN, block, model).
@@ -75,6 +122,8 @@ Decoding lives in one pure function — [`model/sampling.py`](src/rlvr_from_scra
 - **Sampling acceptance**: greedy == argmax; `top_k=1` == greedy; `top_p=1.0` == full-softmax sampling; nucleus renormalizes with out-of-set probability exactly 0; seeded draws reproducible.
 - **Data path**: encode/decode round-trips, vocabulary ordering, the (x, y) shift, and a corpus checksum that fails loudly on the wrong bytes.
 - **Objective**: an untrained model scores exactly ln(V), the reduction is a mean, and one optimizer step provably decreases the loss.
+- **Config**: a run that cannot happen is rejected on construction, and a config survives a YAML round trip as the same object — including the tuple that YAML would quietly hand back as a list.
+- **Training loop**: the schedule is continuous at the warmup handover and never leaves its band; weight decay reaches matrices and not norm gains; evaluation returns the same number twice; the same seed reproduces a run and a different seed does not.
 
 ## repo layout
 
@@ -83,13 +132,22 @@ src/rlvr_from_scratch/
 ├── model/          # attention, positional, norm, ffn, block, transformer, sampling
 ├── tokenizer/      # character-level tokenizer
 ├── data/           # corpus fetch + checksum, encoding, batching
-└── training/       # loss functions (training loop in progress)
+├── training/       # run config, objective, the loop
+├── evaluation/     # held-out task evaluation          (RLVR, not yet written)
+├── rewards/        # verifier and format reward        (RLVR, not yet written)
+├── rollout/        # group sampling and advantages     (RLVR, not yet written)
+├── cli.py          # rlvr-train
+└── reproduce.py    # rlvr-compare
+configs/
+└── tiny.yaml       # the reference run
 ```
 
 ## development
 
 ```text
 make data       # download + verify the training corpus
+make train      # the reference run
+make reference  # the reference run twice, then check the two agree
 make check      # lint + type check + tests (what CI runs)
 make test       # tests only
 make test-cov   # tests with coverage

@@ -18,27 +18,16 @@ sha256 over there. A config plus a clean clone is the whole run.
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
+
+import yaml
 
 from rlvr_from_scratch.model.transformer import TransformerConfig
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-# ===========================================================================
-# SCAFFOLD — delete this block when the file is done.
-#
-# Every comment marked `TODO:` below is a step to write and then delete.
-# Nothing else here is temporary: the docstrings and the fields are final.
-#
-#     grep -n "TODO:" src/rlvr_from_scratch/training/config.py
-#     uv run pytest tests/training/test_config.py -q
-#
-# Order matters. __post_init__ first — while it raises, no TrainConfig can
-# be built at all and the other 30 tests fail for a reason that is not
-# theirs.
-# ===========================================================================
 
 # bumped only when the meaning of an existing field changes, not when one is
 # added. same contract as _FORMAT_VERSION in tokenizer/char.py.
@@ -116,29 +105,81 @@ class TrainConfig:
                 that contradict each other. Messages name the offending
                 value, and both values when two of them disagree.
         """
-        # TODO: 1. check the window fits the model, and raise naming both
-        #    block_size must not exceed model.max_seq_len. this is the one
-        #    that actually bites: get_batch samples a longer window without
-        #    complaining, and it only blows up deep inside forward, in a
-        #    message naming neither number. put both in yours.
+        # =========================================
+        # 1. The window has to fit the model
+        # =========================================
+        # This is the one that actually bites. get_batch happily samples a
+        # window longer than the context; it blows up deep inside forward,
+        # in a message naming neither number. Both go in ours.
+        if self.block_size > self.model.max_seq_len:
+            msg = (
+                f"block_size {self.block_size} exceeds the model's "
+                f"max_seq_len {self.model.max_seq_len}: a window cannot be "
+                f"longer than the context it is fed into"
+            )
+            raise ValueError(msg)
 
-        # TODO: 2. check the schedule is coherent
-        #    max_steps > 0, warmup_steps >= 0, warmup_steps <= max_steps.
-        #    a warmup longer than the run means the lr never leaves the ramp
-        #    and the curve measures something else. let them be equal — an
-        #    all-warmup run is a choice, not a mistake.
+        # =========================================
+        # 2. The schedule has to be coherent
+        # =========================================
+        if self.max_steps <= 0:
+            msg = f"max_steps must be > 0, got {self.max_steps}"
+            raise ValueError(msg)
 
-        # TODO: 3. check the optimiser values are in range
-        #    lr > 0, grad_clip > 0, weight_decay >= 0, both betas strictly
-        #    inside (0, 1), min_lr_ratio inside [0, 1].
-        #    mind the two kinds of bound: betas exclusive at both ends,
-        #    min_lr_ratio inclusive at both.
+        if self.warmup_steps < 0:
+            msg = f"warmup_steps must be >= 0, got {self.warmup_steps}"
+            raise ValueError(msg)
 
-        # TODO: 4. check the data and eval settings are usable
-        #    0 < train_frac < 1, and batch_size, block_size, eval_interval
-        #    and eval_iters all strictly positive.
+        # equal is allowed on purpose: an all-warmup run is a choice. longer
+        # than the run is not — the lr never leaves the ramp, and the curve
+        # then measures the warmup rather than the schedule.
+        if self.warmup_steps > self.max_steps:
+            msg = (
+                f"warmup_steps {self.warmup_steps} exceeds max_steps "
+                f"{self.max_steps}: the lr would never leave the ramp"
+            )
+            raise ValueError(msg)
 
-        raise NotImplementedError  # TODO: delete once the checks are in
+        # =========================================
+        # 3. The optimiser values have to be in range
+        # =========================================
+        for name, value in (("lr", self.lr), ("grad_clip", self.grad_clip)):
+            if value <= 0:
+                msg = f"{name} must be > 0, got {value}"
+                raise ValueError(msg)
+
+        if self.weight_decay < 0:
+            msg = f"weight_decay must be >= 0, got {self.weight_decay}"
+            raise ValueError(msg)
+
+        # two kinds of bound, one line apart: betas are exclusive at both
+        # ends (beta=1.0 is an average that never forgets, beta=0.0 is no
+        # average at all), min_lr_ratio is inclusive at both.
+        for i, beta in enumerate(self.betas):
+            if not 0.0 < beta < 1.0:
+                msg = f"betas[{i}] must be strictly inside (0, 1), got {beta}"
+                raise ValueError(msg)
+
+        if not 0.0 <= self.min_lr_ratio <= 1.0:
+            msg = f"min_lr_ratio must be in [0, 1], got {self.min_lr_ratio}"
+            raise ValueError(msg)
+
+        # =========================================
+        # 4. The data and eval settings have to be usable
+        # =========================================
+        if not 0.0 < self.train_frac < 1.0:
+            msg = f"train_frac must be strictly inside (0, 1), got {self.train_frac}"
+            raise ValueError(msg)
+
+        for name, value in (
+            ("batch_size", self.batch_size),
+            ("block_size", self.block_size),
+            ("eval_interval", self.eval_interval),
+            ("eval_iters", self.eval_iters),
+        ):
+            if value <= 0:
+                msg = f"{name} must be > 0, got {value}"
+                raise ValueError(msg)
 
     # =====================================================================
     # Serialisation
@@ -149,26 +190,22 @@ class TrainConfig:
 
         Returns:
             Every field, with the nested model config flattened to a dict,
-            plus a "version" key. The result must survive a YAML round trip
-            unchanged — not merely be dumpable.
+            plus a "version" key. The result survives a YAML round trip
+            unchanged — not merely dumpable.
         """
-        # TODO: 1. flatten every field into one dict
-        #    use dataclasses.asdict — it recurses into TransformerConfig for
-        #    free, so a field added to either config arrives here without
-        #    being listed by hand. a hand-written dict is exactly how a field
-        #    silently stops being recorded.
+        # asdict recurses into TransformerConfig for free, so a field added
+        # to either config arrives here without being listed by hand. a
+        # hand-written dict is exactly how a field silently stops being
+        # recorded.
+        payload: dict[str, Any] = {"version": VERSION}
+        payload.update(dataclasses.asdict(self))
 
-        # TODO: 2. stamp the version on top
-        #    so a file written today gets read deliberately, not hopefully.
-
-        # TODO: 3. leave nothing behind that changes type in YAML
-        #    the property to hit is
-        #        yaml.safe_load(yaml.safe_dump(payload)) == payload
-        #    safe_dump accepts a tuple and writes it as a list, so betas does
-        #    not fail on the way out — it comes back a different type, and
-        #    then to_dict() and load(save()) disagree about what a config is.
-
-        raise NotImplementedError  # TODO: delete once the payload is built
+        # safe_dump accepts a tuple and writes it as a list, so leaving one
+        # here would not fail on the way out — it would come back a
+        # different type, and to_dict() and load(save()) would then quietly
+        # disagree about what a config is. Convert once, here.
+        payload["betas"] = list(self.betas)
+        return payload
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> TrainConfig:
@@ -186,35 +223,69 @@ class TrainConfig:
                 key is not a field of this config, or if the values fail
                 validation.
         """
-        # TODO: 1. gate on the version before reading anything else
-        #    missing or mismatched -> ValueError naming both versions.
-        #    check rather than trust: the alternative failure is a TypeError
-        #    thousands of lines from the file that caused it.
+        # =========================================
+        # 1. Gate on the version before reading anything else
+        # =========================================
+        # Check rather than trust: the alternative failure is a TypeError
+        # thousands of lines from the file that caused it.
+        if "version" not in payload:
+            msg = (
+                f"config payload carries no 'version' key; this code writes "
+                f"and reads version {VERSION}"
+            )
+            raise ValueError(msg)
 
-        # TODO: 2. rebuild the nested model config
-        #    payload["model"] arrives as a dict and has to leave as a
-        #    TransformerConfig, or every attribute access downstream breaks.
+        found = payload["version"]
+        if found != VERSION:
+            msg = (
+                f"config version {found} cannot be read by this code, which "
+                f"writes version {VERSION}"
+            )
+            raise ValueError(msg)
 
-        # TODO: 3. convert betas back to a tuple
-        #    YAML hands back a list. a naive rebuild gives [0.9, 0.95], and
-        #    (0.9, 0.95) != [0.9, 0.95] — two values that look identical on
-        #    screen and compare unequal.
+        # =========================================
+        # 2. Reject keys this config does not have
+        # =========================================
+        # A renamed or stale key has to fail loudly instead of being dropped
+        # on the floor and quietly replaced by a default.
+        names = {f.name for f in dataclasses.fields(cls)}
+        data: dict[str, Any] = {k: v for k, v in payload.items() if k != "version"}
+        unknown = sorted(set(data) - names)
+        if unknown:
+            msg = (
+                f"config payload has keys TrainConfig does not define: "
+                f"{unknown}; known fields are {sorted(names)}"
+            )
+            raise ValueError(msg)
 
-        # TODO: 4. reject keys this config does not have
-        #    a renamed or stale key must fail loudly instead of being dropped
-        #    on the floor and quietly replaced by a default.
+        # =========================================
+        # 3. Rebuild the types YAML flattened
+        # =========================================
+        # model arrives as a dict and has to leave as a TransformerConfig,
+        # or every attribute access downstream breaks.
+        model = data.get("model")
+        if isinstance(model, dict):
+            data["model"] = TransformerConfig(**model)
 
-        raise NotImplementedError  # TODO: delete once the config is rebuilt
+        # YAML hands back a list. a naive rebuild gives [0.9, 0.95], and
+        # (0.9, 0.95) != [0.9, 0.95] — two values that look identical on
+        # screen and compare unequal.
+        betas = data.get("betas")
+        if betas is not None:
+            first, second = betas
+            data["betas"] = (float(first), float(second))
+
+        # the constructor validates. from_dict does not get a private door.
+        return cls(**data)
 
     def save(self, path: Path) -> None:
         """Write the config to `path` as YAML. Parent directory must exist."""
-        # TODO: 1. dump to_dict() as YAML
-        #    yaml rather than json because AGENTS.md pins
-        #    experiments/<exp>/config.yaml and pyyaml is already a dependency.
-        #    pass sort_keys=False — it keeps the field grouping above intact
-        #    in the file, which is the whole reason the groups exist.
-
-        raise NotImplementedError  # TODO: delete once the file is written
+        # yaml rather than json because a run's config is read by people as
+        # often as by code, and pyyaml is already a dependency.
+        # sort_keys=False keeps the field grouping above intact in the file,
+        # which is the whole reason the groups exist.
+        text = yaml.safe_dump(self.to_dict(), sort_keys=False)
+        path.write_text(text, encoding="utf-8")
 
     @classmethod
     def load(cls, path: Path) -> TrainConfig:
@@ -230,16 +301,20 @@ class TrainConfig:
             ValueError: If the file is not a YAML mapping, or if from_dict
                 rejects its contents.
         """
-        # TODO: 1. parse with yaml.safe_load, never yaml.load
-        #    the second one constructs arbitrary Python objects from a file
-        #    on disk.
+        # safe_load, never load: the second one constructs arbitrary Python
+        # objects from a file on disk.
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
 
-        # TODO: 2. check the shape before trusting it
-        #    a list or a bare scalar in the file is a ValueError naming what
-        #    was found, not an AttributeError somewhere later.
+        # Check the shape before trusting it. A list or a bare scalar in the
+        # file is a ValueError naming what was found, not an AttributeError
+        # somewhere later.
+        if not isinstance(payload, dict):
+            msg = (
+                f"{path} does not hold a YAML mapping: it parsed as "
+                f"{type(payload).__name__}"
+            )
+            raise ValueError(msg)
 
-        # TODO: 3. hand off to from_dict
-        #    the version gate and the betas fix live in exactly one place.
-        #    this method parses; it does not interpret.
-
-        raise NotImplementedError  # TODO: delete once the file is parsed
+        # this method parses; it does not interpret. the version gate and
+        # the betas fix live in exactly one place.
+        return cls.from_dict(payload)

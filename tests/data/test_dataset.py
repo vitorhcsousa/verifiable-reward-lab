@@ -151,17 +151,13 @@ def test_unknown_split_message_names_the_legal_values(corpus: Corpus) -> None:
 
 @pytest.mark.parametrize("split", ["train", "val"])
 def test_batch_shapes_and_dtype(corpus: Corpus, split: str) -> None:
-    x, y = get_batch(
-        corpus, split, batch_size=B, block_size=T, generator=_gen(0)
-    )
+    x, y = get_batch(corpus, split, batch_size=B, block_size=T, generator=_gen(0))
     assert x.shape == y.shape == (B, T)
     assert x.dtype == y.dtype == torch.long
 
 
 def test_ids_are_within_vocab(corpus: Corpus) -> None:
-    x, y = get_batch(
-        corpus, "train", batch_size=B, block_size=T, generator=_gen(0)
-    )
+    x, y = get_batch(corpus, "train", batch_size=B, block_size=T, generator=_gen(0))
     for part in (x, y):
         assert int(part.min()) >= 0
         assert int(part.max()) < corpus.vocab_size
@@ -180,18 +176,14 @@ def test_targets_are_inputs_shifted_by_one(corpus: Corpus) -> None:
     convincingly either way. This is the one test in the box that cannot
     be cut.
     """
-    x, y = get_batch(
-        corpus, "train", batch_size=B, block_size=T, generator=_gen(0)
-    )
+    x, y = get_batch(corpus, "train", batch_size=B, block_size=T, generator=_gen(0))
     assert torch.equal(y[:, :-1], x[:, 1:])
 
 
 def test_shift_holds_against_the_raw_corpus(corpus: Corpus) -> None:
     # Stronger than the relation above: the pair must match a real window
     # of the corpus, not merely be self-consistent.
-    x, y = get_batch(
-        corpus, "train", batch_size=1, block_size=T, generator=_gen(7)
-    )
+    x, y = get_batch(corpus, "train", batch_size=1, block_size=T, generator=_gen(7))
     data = corpus.train
     row = x[0]
     # unfold over the WHOLE tensor: slicing it first leaves the last few
@@ -285,9 +277,7 @@ def test_never_reads_past_the_end_of_the_split(tmp_path: Path) -> None:
     path.write_text("".join(_ALPHABET[i % len(_ALPHABET)] for i in range(40)))
     small = load_corpus(path, train_frac=0.5)
     for seed in range(60):
-        x, y = get_batch(
-            small, "val", batch_size=8, block_size=T, generator=_gen(seed)
-        )
+        x, y = get_batch(small, "val", batch_size=8, block_size=T, generator=_gen(seed))
         assert x.shape == y.shape == (8, T)
         assert int(y.max()) < small.vocab_size
 

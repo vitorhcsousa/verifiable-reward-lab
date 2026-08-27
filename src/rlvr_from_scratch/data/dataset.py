@@ -12,27 +12,6 @@ example, it is T of them: at every position t the model sees x[:, :t+1] and
 must predict y[:, t]. Get the shift wrong by one and the model trains on a
 different objective than you think, the loss still falls, and nothing
 complains until you read the samples days later.
-
-──────────────────────────────────────────────────────────────────────────
-HOW TO WORK THIS FILE
-
-Every function below is a stub with a numbered plan in its body. Delete the
-comments as you replace them with code — a step still commented is a step
-still to do.
-
-Run the tests first and let them drive the order:
-
-    uv run pytest tests/data/ -q          # 18 red
-
-Suggested order, each stage turning a group green:
-    1. Corpus.split      -> the "unknown split" test
-    2. load_corpus       -> the construction tests (6 of them)
-    3. get_batch         -> everything else
-
-The tests were checked by mutation: seven plausible wrong implementations
-were written against them and all seven were caught. If a test fails, it is
-much more likely your code than the test.
-──────────────────────────────────────────────────────────────────────────
 """
 
 from __future__ import annotations
@@ -91,9 +70,7 @@ class Corpus:
             return self.train
         if split == "val":
             return self.val
-        msg = (
-            f"unknown split {split!r}; expected 'train' or 'val'"
-        )
+        msg = f"unknown split {split!r}; expected 'train' or 'val'"
         raise ValueError(msg)
 
 
