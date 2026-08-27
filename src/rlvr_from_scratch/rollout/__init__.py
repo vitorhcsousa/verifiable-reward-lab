@@ -1,1 +1,1 @@
-"""Group sampling and advantages. Phase 3, not yet written."""
+"""Group sampling and advantages. Part of the RLVR study, not yet written."""

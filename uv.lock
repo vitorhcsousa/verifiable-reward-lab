@@ -2353,68 +2353,6 @@ wheels = [
 ]
 
 [[package]]
-name = "rlvr-from-scratch"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "datasets" },
-    { name = "ipykernel" },
-    { name = "lightning" },
-    { name = "matplotlib" },
-    { name = "numpy" },
-    { name = "pyyaml" },
-    { name = "sentencepiece" },
-    { name = "torch" },
-    { name = "tqdm" },
-]
-
-[package.optional-dependencies]
-tracking = [
-    { name = "wandb" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "lovely-tensors" },
-    { name = "marimo" },
-    { name = "plotly" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
-    { name = "torchinfo" },
-    { name = "ty" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "datasets", specifier = ">=4.8.4" },
-    { name = "ipykernel", specifier = ">=7.2.0" },
-    { name = "lightning", specifier = ">=2.6.1" },
-    { name = "matplotlib", specifier = ">=3.10.8" },
-    { name = "numpy", specifier = ">=2.4.4" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "sentencepiece", specifier = ">=0.2.1" },
-    { name = "torch", specifier = ">=2.11.0" },
-    { name = "tqdm", specifier = ">=4.67.3" },
-    { name = "wandb", marker = "extra == 'tracking'", specifier = ">=0.25.1" },
-]
-provides-extras = ["tracking"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "lovely-tensors", specifier = ">=0.1.22" },
-    { name = "marimo", specifier = ">=0.22.0" },
-    { name = "plotly", specifier = ">=6.6.0" },
-    { name = "pre-commit", specifier = ">=4.5.1" },
-    { name = "pytest", specifier = ">=9.0.2" },
-    { name = "pytest-cov", specifier = ">=7.1.0" },
-    { name = "ruff", specifier = ">=0.15.8" },
-    { name = "torchinfo", specifier = ">=1.8.0" },
-    { name = "ty", specifier = ">=0.0.27" },
-]
-
-[[package]]
 name = "ruff"
 version = "0.15.9"
 source = { registry = "https://pypi.org/simple" }
@@ -2771,6 +2709,68 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e3/ad/4a96c425be6fb67e0621e62d86c402b4a17ab2be7f7c055d9bd2f638b9e2/uvicorn-0.42.0.tar.gz", hash = "sha256:9b1f190ce15a2dd22e7758651d9b6d12df09a13d51ba5bf4fc33c383a48e1775", size = 85393, upload-time = "2026-03-16T06:19:50.077Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/89/f8827ccff89c1586027a105e5630ff6139a64da2515e24dafe860bd9ae4d/uvicorn-0.42.0-py3-none-any.whl", hash = "sha256:96c30f5c7abe6f74ae8900a70e92b85ad6613b745d4879eb9b16ccad15645359", size = 68830, upload-time = "2026-03-16T06:19:48.325Z" },
+]
+
+[[package]]
+name = "verifiable-reward-lab"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "datasets" },
+    { name = "ipykernel" },
+    { name = "lightning" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pyyaml" },
+    { name = "sentencepiece" },
+    { name = "torch" },
+    { name = "tqdm" },
+]
+
+[package.optional-dependencies]
+tracking = [
+    { name = "wandb" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "lovely-tensors" },
+    { name = "marimo" },
+    { name = "plotly" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+    { name = "torchinfo" },
+    { name = "ty" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "datasets", specifier = ">=4.8.4" },
+    { name = "ipykernel", specifier = ">=7.2.0" },
+    { name = "lightning", specifier = ">=2.6.1" },
+    { name = "matplotlib", specifier = ">=3.10.8" },
+    { name = "numpy", specifier = ">=2.4.4" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "sentencepiece", specifier = ">=0.2.1" },
+    { name = "torch", specifier = ">=2.11.0" },
+    { name = "tqdm", specifier = ">=4.67.3" },
+    { name = "wandb", marker = "extra == 'tracking'", specifier = ">=0.25.1" },
+]
+provides-extras = ["tracking"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "lovely-tensors", specifier = ">=0.1.22" },
+    { name = "marimo", specifier = ">=0.22.0" },
+    { name = "plotly", specifier = ">=6.6.0" },
+    { name = "pre-commit", specifier = ">=4.5.1" },
+    { name = "pytest", specifier = ">=9.0.2" },
+    { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "ruff", specifier = ">=0.15.8" },
+    { name = "torchinfo", specifier = ">=1.8.0" },
+    { name = "ty", specifier = ">=0.0.27" },
 ]
 
 [[package]]

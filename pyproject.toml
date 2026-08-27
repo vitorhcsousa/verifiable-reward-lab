@@ -1,7 +1,7 @@
 [project]
-name = "rlvr-from-scratch"
+name = "verifiable-reward-lab"
 version = "0.1.0"
-description = "A decoder-only transformer and its training loop, built from raw tensors, on the way to an RLVR study."
+description = "Empirical study of reinforcement learning with verifiable rewards: GRPO, controlled ablations, uncertainty, and failure analysis."
 readme = "README.md"
 authors = [
     { name = "vitorhcsousa", email = "vitorsousavhcs@outlook.com" }
@@ -19,6 +19,10 @@ dependencies = [
     "tqdm>=4.67.3",
 ]
 
+[project.urls]
+Repository = "https://github.com/vitorhcsousa/verifiable-reward-lab"
+Issues = "https://github.com/vitorhcsousa/verifiable-reward-lab/issues"
+
 [project.optional-dependencies]
 # Optional because a run must be reproducible without a tracking account:
 # metrics.jsonl and summary.json are the record, wandb is a view of it.
@@ -33,6 +37,12 @@ rlvr-compare = "rlvr_from_scratch.reproduce:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# the distribution is verifiable-reward-lab, the import package stays
+# rlvr_from_scratch. renaming the module would churn every import and
+# every article link for no user-facing gain.
+[tool.hatch.build.targets.wheel]
+packages = ["src/rlvr_from_scratch"]
 
 [dependency-groups]
 dev = [

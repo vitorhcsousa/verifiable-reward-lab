@@ -6,7 +6,7 @@ No torch in here on purpose. encode returns a plain list[int] and the tensor
 conversion happens one layer up in the data package, which keeps this file
 readable on its own and its tests free of a torch import.
 
-A char vocab is the boring choice, which is the point for Cycle 3: it makes the
+A char vocab is the boring choice, which is the point: it makes the
 training loop the object of study instead of the tokenizer. BPE later, if it
 earns it.
 """

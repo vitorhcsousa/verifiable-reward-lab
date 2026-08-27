@@ -1,6 +1,6 @@
 """Tokenizers.
 
-Phase 2 (training data path): a character-level tokenizer with no
+Training foundation: a character-level tokenizer with no
 dependencies, so the training loop is the object of study rather than the
 tokenizer. BPE later, if it earns it.
 """

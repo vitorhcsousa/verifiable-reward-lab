@@ -1,4 +1,4 @@
-"""Training objectives built from scratch.
+"""Training objectives built from raw tensors.
 
 Implements token-level cross-entropy for autoregressive language modelling,
 with shape annotations at every step.

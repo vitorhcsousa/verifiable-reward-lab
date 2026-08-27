@@ -1,1 +1,1 @@
-"""Held-out task evaluation for GSM8K. Phase 3, not yet written."""
+"""Held-out task evaluation for GSM8K. Part of the RLVR study, not yet written."""

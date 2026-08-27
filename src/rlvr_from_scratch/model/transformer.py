@@ -1,6 +1,6 @@
-"""The full decoder-only transformer, assembled from scratch.
+"""The full decoder-only transformer, assembled from raw tensors.
 
-Wires the Phase 1 components into a complete language model:
+Wires the model components into a complete language model:
 
     tokens
       -> token embedding            (B, T)      -> (B, T, d_model)

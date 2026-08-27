@@ -1,4 +1,4 @@
-"""Feed-forward networks built from scratch.
+"""Feed-forward networks built from raw tensors.
 
 Implements SwiGLU (Llama-style, gated) and a vanilla GELU FFN with
 shape annotations at every step. No torch.nn helpers beyond Linear.

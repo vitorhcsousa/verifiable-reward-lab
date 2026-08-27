@@ -1,4 +1,4 @@
-"""Attention mechanisms built from scratch.
+"""Attention mechanisms built from raw tensors.
 
 Implements scaled dot-product attention and multi-head attention
 with shape annotations at every step. No torch.nn.MultiheadAttention.

@@ -1,6 +1,6 @@
-"""From-scratch transformer model components.
+"""Transformer model components, built from raw tensors.
 
-Phase 1 (Transformer Internals): attention, positional encodings,
+Model foundations: attention, positional encodings,
 normalization, feed-forward networks, the transformer block, and the
 fully assembled decoder-only language model.
 """

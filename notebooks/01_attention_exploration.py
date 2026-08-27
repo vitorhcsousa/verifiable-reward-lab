@@ -26,7 +26,7 @@ def _(mo):
     > **How to use:** drag the sliders in the Configuration section below,
     > then scroll down. Every visualization updates automatically.
 
-    **Code:** [`src/rlvr_from_scratch/model/attention.py`](https://github.com/vitorhcsousa/rlvr-from-scratch)
+    **Code:** [`src/rlvr_from_scratch/model/attention.py`](https://github.com/vitorhcsousa/verifiable-reward-lab)
     **Article:** [Attention Is All You Need to Implement](https://www.vitorsousa.com/foundations/attention-from-scratch)
     """)
     return

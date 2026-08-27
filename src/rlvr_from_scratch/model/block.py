@@ -1,6 +1,6 @@
-"""Transformer block built from scratch.
+"""Transformer block built from raw tensors.
 
-Assembles a single transformer block from the from-scratch components:
+Assembles a single transformer block from the components in this package:
 multi-head attention, two normalization layers, and a feed-forward
 network, tied together with residual connections.
 

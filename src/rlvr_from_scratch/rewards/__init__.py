@@ -1,1 +1,1 @@
-"""Verifier and format reward. Phase 3, not yet written."""
+"""Verifier and format reward. Part of the RLVR study, not yet written."""

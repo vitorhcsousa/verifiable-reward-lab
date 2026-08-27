@@ -1,2 +1,1 @@
-def hello() -> str:
-    return "Hello from rlvr-from-scratch!"
+"""Learning with Verifiable Rewards — https://github.com/vitorhcsousa/verifiable-reward-lab"""

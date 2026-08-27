@@ -1,4 +1,4 @@
-"""Normalization layers built from scratch.
+"""Normalization layers built from raw tensors.
 
 Implements RMSNorm and LayerNorm with shape annotations at every step.
 No torch.nn.LayerNorm, no F.rms_norm.

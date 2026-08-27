@@ -1,18 +1,52 @@
-# rlvr-from-scratch
+# Learning with Verifiable Rewards
 
-[![CI](https://github.com/vitorhcsousa/rlvr-from-scratch/actions/workflows/ci.yml/badge.svg)](https://github.com/vitorhcsousa/rlvr-from-scratch/actions)
+[![CI](https://github.com/vitorhcsousa/verifiable-reward-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/vitorhcsousa/verifiable-reward-lab/actions)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**A decoder-only language model, built from raw tensors.**
+> An empirical research engineering project exploring reinforcement learning with
+> verifiable rewards through reproducible baselines, controlled GRPO experiments,
+> uncertainty analysis, and systematic failure analysis.
 
-Attention through to a model that trains — one file per concept, every component
-shape-, numerical- and gradient-tested. Single GPU, small models, pure PyTorch:
-no `trl`, no `accelerate` magic.
+The question is whether GRPO earns its cost against a properly built SFT baseline
+at this scale, and where it fails. Everything here exists to answer that honestly:
+enough infrastructure to run the comparison, a protocol frozen before any result
+is seen, seed variability reported next to point estimates, and a failure taxonomy
+derived from inspected examples rather than assumed.
 
-In the spirit of nanoGPT: small enough to read end to end, tested enough to trust.
+This is a study, not a tutorial and not an RL library. It implements one algorithm
+and varies it along three axes. It is finite by design.
+
+## research questions
+
+| | |
+| :-- | :-- |
+| **RQ1** | Does GRPO materially improve held-out GSM8K accuracy over the chosen SFT baseline at this scale? |
+| **RQ2** | How sensitive is the result to group size? |
+| **RQ3** | What effect does KL regularization have? |
+| **RQ4** | How does format reward change optimization behavior? |
+| **RQ5** | Where does reward improve without a corresponding improvement in held-out task accuracy? |
+
+## the study
+
+| | |
+| :-- | :-- |
+| Base model | Qwen 2.5-0.5B |
+| Task | GSM8K |
+| Pipeline | SFT baseline → verifier → GRPO → held-out evaluation → ablations → failure analysis |
+| Reported | per-seed accuracy, seed variability, reward curves, compute, limitations |
+
+Three controlled ablations, one variable at a time: **group size**, **KL**,
+**format reward**. A fourth is not added because an interesting idea appears.
 
 ## status
+
+### Model foundations — built and tested
+
+The technical foundation the study rests on, not its purpose. A decoder-only
+transformer implemented from raw PyTorch tensors so that attention, positional
+encodings, normalization, feed-forward layers, blocks, the KV-cache and sampling
+are understood at the level of shapes and gradients rather than taken on trust.
 
 **Built and tested.** The complete decoder-only transformer: scaled dot-product
 and multi-head attention, RoPE / sinusoidal / learned / ALiBi positional
@@ -21,6 +55,11 @@ post-norm blocks, an incremental **KV-cache that matches the full forward pass a
 `atol=1e-5`**, and **greedy / temperature / top-k / top-p sampling** — 112 tests
 across the model layer.
 
+### Training foundation — built and tested
+
+Configuration, data path, training loop, a tiny reproducible pretraining run,
+metrics, evaluation, CLI.
+
 **Built and tested.** The training path: a character-level tokenizer, corpus
 fetching with a pinned checksum, encoding and batching, token-level
 cross-entropy, a frozen run config, and the training loop itself — warmup plus
@@ -28,14 +67,24 @@ cosine schedule, decoupled weight decay, gradient clipping, deterministic
 evaluation, and a run directory that describes itself. One command reproduces
 the reference run on CPU.
 
-**Next.** The RLVR study: verifier, rollouts, GRPO, and the empirical work on
-GSM8K. `evaluation/`, `rewards/` and `rollout/` are placeholders until then.
+### RLVR study — next
+
+SFT baseline on GSM8K, the verifier, group sampling, GRPO, and held-out
+evaluation against Qwen 2.5-0.5B. `evaluation/`, `rewards/` and `rollout/` are
+placeholders until then.
+
+### Empirical analysis — the point of the repository
+
+GRPO against the SFT baseline; group-size sensitivity; KL regularization; format
+reward; seed variability; reward improvement measured against held-out accuracy
+rather than assumed to track it; and a taxonomy of failure modes derived from
+inspected examples.
 
 ## quickstart
 
 ```bash
-git clone https://github.com/vitorhcsousa/rlvr-from-scratch.git
-cd rlvr-from-scratch
+git clone https://github.com/vitorhcsousa/verifiable-reward-lab.git
+cd verifiable-reward-lab
 uv sync --group dev
 make data    # download + checksum-verify the training corpus
 make check   # ruff + ty + pytest
@@ -58,7 +107,7 @@ out right. It writes `runs/tiny/` containing `config.yaml`, `tokenizer.json`,
 `metrics.jsonl`, `summary.json` and `ckpt.pt` — the config beside the metrics is
 the run that actually happened, overrides included.
 
-Generate with a randomly initialized model (the training loop is in progress):
+Generate directly from the model layer:
 
 ```python
 import torch
@@ -91,11 +140,14 @@ Decoding lives in one pure function — [`model/sampling.py`](src/rlvr_from_scra
 The claim this repository makes about itself, stated so it can be checked:
 
 | | |
-|---|---|
-| Clean clone | `git clone` + `uv sync` — no hidden local state |
-| One command | `uv run rlvr-train --config configs/tiny.yaml` |
-| Data | fetched from a pinned URL, sha256-verified, never fetched by hand |
-| Hardware | the reference run is a **CPU** run |
+| :-- | :-- |
+| Clean clone | `git clone` — no hidden local state |
+| Install | `uv sync` — nothing else |
+| CI | `ruff`, `ty` and `pytest` green on `master` |
+| One command | `uv run rlvr-train --config configs/tiny.yaml`, from a committed config |
+| Data | pinned URL, sha256-verified, never fetched by hand |
+| Hardware | CPU — the acceptance run needs no accelerator |
+| Runtime | **≤15 minutes** on CPU |
 | Tolerance | the same seed reproduces the final validation loss within **±0.05 nats** |
 
 Check the last one:
@@ -154,6 +206,16 @@ make test-cov   # tests with coverage
 make format     # auto-format
 make ci         # full pipeline
 ```
+
+## out of scope
+
+Deliberately, so the study stays finite and answerable:
+
+- DAPO, GDPO, or any further algorithm added for breadth
+- a generic PPO/RL framework or RLHF library
+- large-scale pretraining
+- distributed training infrastructure
+- agent frameworks unrelated to the question
 
 ## writing
 

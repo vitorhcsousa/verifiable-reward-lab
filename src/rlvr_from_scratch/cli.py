@@ -18,7 +18,7 @@ def build_parser() -> argparse.ArgumentParser:
     """The command-line surface, kept deliberately small."""
     parser = argparse.ArgumentParser(
         prog="rlvr-train",
-        description="Train the from-scratch decoder-only transformer.",
+        description="Train the decoder-only transformer from a committed config.",
     )
     parser.add_argument(
         "--config",

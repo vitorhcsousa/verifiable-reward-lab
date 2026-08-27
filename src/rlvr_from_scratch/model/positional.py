@@ -1,4 +1,4 @@
-"""Positional encoding built from scratch.
+"""Positional encoding built from raw tensors.
 
 Implements sinusoidal, learned, rotary (RoPE), and ALiBi position
 encodings with shape annotations at every step. No torch.nn helpers
