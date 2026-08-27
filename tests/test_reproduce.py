@@ -1,9 +1,4 @@
-"""
-Tests for the reproducibility check.
-
-The tolerance is the claim. These tests pin that it is actually enforced in
-both directions — a comparison that can only pass is not a check.
-"""
+"""Tests for the reproducibility check, in both directions."""
 
 from __future__ import annotations
 

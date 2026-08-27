@@ -1,18 +1,6 @@
-"""
-Compare two runs and say whether the repository's reproducibility claim held.
+"""Check that two runs of the same config landed within tolerance.
 
-The claim in the README is a number, not an adjective: the same config and
-the same seed land within a stated tolerance of each other in validation
-loss. This is the thing that checks it, so the claim stays falsifiable by
-anyone who clones the repo.
-
-    uv run rlvr-compare runs/ref-a runs/ref-b
-
-The tolerance is an argument with a default, deliberately. It is a property
-of the run — model size, step count, hardware — not a universal constant,
-and it is meant to be validated on a second machine before being frozen.
-What must not happen is the tolerance being widened later to rescue a
-reproduction that failed; that turns a test into a decoration.
+uv run rlvr-compare runs/ref-a runs/ref-b
 """
 
 from __future__ import annotations
@@ -22,7 +10,7 @@ import json
 import sys
 from pathlib import Path
 
-# nats per token. Stated in the README next to the claim it backs.
+# nats per token, stated in the README next to the claim it backs
 DEFAULT_TOLERANCE = 0.05
 
 
@@ -36,7 +24,7 @@ def read_val_loss(run_dir: Path) -> float:
         The run's final validation loss, in nats per token.
 
     Raises:
-        ValueError: If the summary is missing or does not carry the field.
+        ValueError: If the summary is missing or lacks the field.
     """
     path = run_dir / "summary.json"
     if not path.exists():
@@ -58,6 +46,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("first", type=Path, help="a run directory")
     parser.add_argument("second", type=Path, help="another run directory")
+    # an argument, not a constant: the tolerance is a property of the run,
+    # and is meant to be validated on a second machine before being frozen
     parser.add_argument(
         "--tolerance",
         type=float,

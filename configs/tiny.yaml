@@ -1,9 +1,5 @@
-# The reference run.
-#
-# Not a good language model — a falsifiable claim about this repository:
-# a clean clone plus this file reproduces the same validation loss on CPU
-# in a few minutes. It is sized for that claim and nothing else. Research
-# runs get their own configs; this one only has to stay honest.
+# The reference run: a clean clone plus this file reproduces the same
+# validation loss on CPU in a few minutes. Sized for that claim, nothing else.
 #
 #     uv run rlvr-train --config configs/tiny.yaml
 version: 1

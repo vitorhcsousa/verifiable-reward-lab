@@ -1,21 +1,4 @@
-"""
-Tests for the training loop.
-
-Two things are being pinned here, and only the second one is about learning.
-
-The first is the schedule and the plumbing: a learning rate that ramps and
-decays where it says it does, an optimiser that decays the right tensors, an
-evaluation that returns the same number when nothing has changed. These are
-arithmetic and they are tested as arithmetic.
-
-The second is reproducibility. Two runs of one config must produce the same
-number, and two runs of different seeds must not — the second half matters
-as much as the first, because a "reproducible" run that is reproducible
-because nothing depends on the seed is not reproducible, it is broken.
-
-Nothing here trains anything real. Forty steps on a pangram is a smoke test
-for the mechanism, not a language model.
-"""
+"""Tests for the training loop: the schedule, the plumbing, and reproducibility."""
 
 from __future__ import annotations
 

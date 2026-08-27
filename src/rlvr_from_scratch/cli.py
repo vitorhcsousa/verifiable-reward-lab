@@ -1,19 +1,6 @@
-"""
-The one command a stranger runs.
+"""Entry point for a training run.
 
-    uv run rlvr-train --config configs/tiny.yaml
-
-That line has to be the whole story: it downloads and checksums its own
-corpus, trains, evaluates, and leaves a directory that describes what
-happened. No notebook, no manual data step, no flag that has to be
-remembered to make the numbers come out right.
-
-Overrides exist for the three things that are genuinely about *this*
-invocation rather than about the experiment — where to run, which seed, how
-long. Every one of them is folded into the config before training starts, so
-the config.yaml written next to the metrics is the run that actually
-happened, not the file it was launched from. An override that changed the
-run without changing its record would defeat the point of having a record.
+uv run rlvr-train --config configs/tiny.yaml
 """
 
 from __future__ import annotations
@@ -54,13 +41,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--seed",
         type=int,
         default=None,
-        help="override the config's seed; use to run the same config again",
+        help="override the config's seed",
     )
     parser.add_argument(
         "--max-steps",
         type=int,
         default=None,
-        help="override the config's max_steps; useful for a smoke run",
+        help="override the config's max_steps, e.g. for a smoke run",
     )
     parser.add_argument(
         "--quiet",
@@ -78,10 +65,8 @@ def apply_overrides(config: TrainConfig, args: argparse.Namespace) -> TrainConfi
         args:   Parsed arguments; None means "leave it alone".
 
     Returns:
-        A new config. TrainConfig is frozen, so this is a replace, not a
-        mutation — and it is re-validated on construction, which means an
-        override that produces an impossible run fails here rather than
-        halfway through training.
+        A new config, re-validated on construction. train() saves this one,
+        so the config.yaml beside the metrics is the run that happened.
     """
     changes: dict[str, object] = {}
     if args.device is not None:
@@ -90,9 +75,7 @@ def apply_overrides(config: TrainConfig, args: argparse.Namespace) -> TrainConfi
         changes["seed"] = args.seed
     if args.max_steps is not None:
         changes["max_steps"] = args.max_steps
-        # A shortened run whose warmup is longer than the run itself is not
-        # a shortened run, it is an all-warmup one. Clamp rather than fail:
-        # --max-steps 5 is how a smoke test is written.
+        # clamp rather than fail: --max-steps 5 is how a smoke run is written
         changes["warmup_steps"] = min(config.warmup_steps, args.max_steps)
 
     if not changes:
@@ -101,15 +84,14 @@ def apply_overrides(config: TrainConfig, args: argparse.Namespace) -> TrainConfi
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point. Returns a process exit code.
+    """Entry point.
 
     Args:
         argv: Argument list, or None to read sys.argv.
 
     Returns:
-        0 on a completed run, 1 on any expected failure — a bad config, a
-        corpus whose bytes do not match the pin, an unavailable device.
-        Nonzero so `make` stops here instead of carrying on.
+        0 on a completed run, 1 on a bad config, a corpus whose bytes do
+        not match the pin, or an unavailable device.
     """
     args = build_parser().parse_args(argv)
 
@@ -120,6 +102,7 @@ def main(argv: list[str] | None = None) -> int:
         config = apply_overrides(config, args)
         result = train(config, out_dir=out_dir, verbose=not args.quiet)
     except (ValueError, OSError) as e:
+        # nonzero so make stops here
         print(f"FAILED: {e}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:

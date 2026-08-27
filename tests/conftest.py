@@ -1,10 +1,4 @@
-"""Fixtures and helpers shared across the test suite.
-
-The corpus fixture exists so that nothing under tests/ touches the network.
-`train` fetches and checksums the pinned corpus by default, which is the
-right behaviour for a run and the wrong one for a test: a suite that needs
-the internet fails for reasons that have nothing to do with the code.
-"""
+"""Fixtures shared across the test suite."""
 
 from __future__ import annotations
 
@@ -15,10 +9,9 @@ import pytest
 from rlvr_from_scratch.model.transformer import TransformerConfig
 from rlvr_from_scratch.training.config import TrainConfig
 
-# A pangram, so the vocabulary is exactly the 26 letters plus space and
-# newline — small, and known without having to compute it. Repeated because
-# get_batch needs a corpus longer than one window, and because a model that
-# cannot learn *this* in forty steps has something wrong with it.
+# a pangram, so the vocab is exactly 26 letters plus space and newline.
+# repeated because get_batch needs a corpus longer than one window. keeps
+# the suite off the network, which train() would otherwise reach for.
 TINY_TEXT = "the quick brown fox jumps over the lazy dog\n" * 200
 TINY_VOCAB_SIZE = 28
 

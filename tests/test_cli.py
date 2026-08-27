@@ -1,11 +1,4 @@
-"""
-Tests for the one command a stranger runs.
-
-The interesting property is not that the CLI trains — trainer.py's tests
-cover that. It is that the config written *next to the metrics* is the run
-that actually happened. An override that changes a run without changing its
-record is worse than no override at all: it makes the directory lie.
-"""
+"""Tests for the CLI. The property that matters: the saved config is the run."""
 
 from __future__ import annotations
 

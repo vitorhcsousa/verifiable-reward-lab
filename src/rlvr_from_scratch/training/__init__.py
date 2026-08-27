@@ -1,14 +1,4 @@
-"""Training the custom model.
-
-Phase 2 (training foundation): the frozen config that describes a run, the
-objective, and the loop that turns one into the other. The custom
-transformer exists to prove the mechanics are understood end to end — it is
-not the model the RLVR study is run on.
-
-`fetch` and the CLI are deliberately not re-exported here: both run as
-entry points, and importing them from this __init__ would load the module
-once as a package attribute and again as __main__.
-"""
+"""Training the custom model: the run config, the objective, and the loop."""
 
 from __future__ import annotations
 
