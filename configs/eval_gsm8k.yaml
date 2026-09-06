@@ -1,0 +1,21 @@
+# The frozen evaluation of the base model, W36 P2b.
+#
+#     uv run rlvr-eval --config configs/eval_gsm8k.yaml
+#
+# Changing anything here after a result has been seen is a Deviation, and
+# goes in the protocol with a date and a reason.
+version: 1
+
+seed: 1337            # must match the split seed, or "dev" moves
+split: dev
+n_examples: 200       # a prefix of dev's frozen order
+confirm_held_out: false
+
+model_name: Qwen/Qwen2.5-0.5B
+model_revision: main  # replace with the sha summary.json reports
+n_shots: 4
+max_new_tokens: 256
+
+batch_size: 8
+device: mps           # the number in the protocol names the device it came from
+dtype: float32
