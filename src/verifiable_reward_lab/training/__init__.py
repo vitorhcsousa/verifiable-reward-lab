@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from verifiable_reward_lab.training.config import VERSION, TrainConfig
+from verifiable_reward_lab.training.grpo_config import GRPOConfig
 from verifiable_reward_lab.training.losses import cross_entropy_loss
+from verifiable_reward_lab.training.sft_config import SFTConfig
 from verifiable_reward_lab.training.trainer import (
     TrainResult,
     configure_optimizer,
@@ -14,8 +16,12 @@ from verifiable_reward_lab.training.trainer import (
     train,
 )
 
+# VERSION here is TrainConfig's. SFTConfig and GRPOConfig carry their own,
+# in their own modules, because they version independently.
 __all__ = [
     "VERSION",
+    "GRPOConfig",
+    "SFTConfig",
     "TrainConfig",
     "TrainResult",
     "configure_optimizer",

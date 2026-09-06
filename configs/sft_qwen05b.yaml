@@ -1,0 +1,28 @@
+# The SFT baseline of RQ1, frozen in W36 (P3a).
+#
+# This is what GRPO is compared against. The base model's 4-shot number
+# (0.410 on dev[:200]) is a harness sanity check, not this.
+#
+# Evaluate the resulting checkpoint with n_shots: 0 - it was trained on the
+# format, so showing it examples would measure the prompt instead.
+version: 1
+
+seed: 1337
+split_seed: 1337      # must equal the protocol's split seed
+
+model_name: Qwen/Qwen2.5-0.5B
+model_revision: 060db6499f32faf8b98477b0a26969ef7d8b9987
+
+max_seq_len: 640
+mask_prompt_loss: true
+
+epochs: 2
+lr: 1.0e-5
+warmup_ratio: 0.03
+weight_decay: 0.0
+grad_clip: 1.0
+batch_size: 8
+grad_accum: 2         # effective batch 16, which is what the lr was picked against
+
+device: mps
+dtype: float32
