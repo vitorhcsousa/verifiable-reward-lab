@@ -1,0 +1,27 @@
+# GRPO base hyperparameters, frozen in W36 (P3a) before any GRPO result.
+#
+# Cost of this config, at the W36 measured 3.3 s per completion:
+#   60 * 8 * 8 = 3840 completions ~= 3.5 h per run.
+# Three seeds for RQ1, one seed per ablation. That is the block's budget.
+#
+# Ablations vary exactly one field of this file at a time (W40).
+version: 1
+
+seed: 1337
+init_from: runs/sft/seed-1337
+
+group_size: 8
+questions_per_step: 8
+steps: 60
+
+lr: 1.0e-6
+kl_coef: 0.04
+clip_eps: 0.2
+grad_clip: 1.0
+
+temperature: 1.0      # rollouts are sampled; evaluation stays greedy
+top_p: 1.0
+max_new_tokens: 256
+
+device: mps
+dtype: float32
