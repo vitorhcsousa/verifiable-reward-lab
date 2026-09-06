@@ -17,10 +17,12 @@ import pytest
 
 from rlvr_from_scratch.data.fetch import (
     DEFAULT,
+    GSM8K_REV,
     SOURCES,
     Source,
     check,
     fetch,
+    main,
     sha256,
 )
 
@@ -213,3 +215,53 @@ def test_pins_are_well_formed() -> None:
         assert src.nbytes > 0
         assert src.url.startswith("https://")
         assert src.note
+
+
+def test_fnames_are_distinct() -> None:
+    """Two pins writing the same filename would overwrite each other."""
+    fnames = [src.fname for src in SOURCES.values()]
+    assert len(fnames) == len(set(fnames))
+
+
+def test_gsm8k_is_pinned_to_a_commit() -> None:
+    """A branch url is a moving pin - the revision has to be a commit sha."""
+    assert len(GSM8K_REV) == 40
+    for name in ("gsm8k-train", "gsm8k-test"):
+        assert GSM8K_REV in SOURCES[name].url
+        assert "/master/" not in SOURCES[name].url
+
+
+# ---- the cli ------------------------------------------------------------
+
+
+def test_all_fetches_every_source(
+    tmp_path: Path, upstream: FakeUpstream, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`make data` has to bring every corpus, not just the default one."""
+    src = make_src(BLOB)
+    two = {
+        "a": src,
+        "b": Source(
+            url=src.url,
+            sha256=src.sha256,
+            fname="other.txt",
+            nbytes=src.nbytes,
+            note=src.note,
+        ),
+    }
+    monkeypatch.setattr("rlvr_from_scratch.data.fetch.SOURCES", two)
+
+    assert main(["--all", "--dest", str(tmp_path)]) == 0
+    assert (tmp_path / "input.txt").read_bytes() == BLOB
+    assert (tmp_path / "other.txt").read_bytes() == BLOB
+    assert upstream.calls == 2
+
+
+def test_cli_reports_failure_with_nonzero(
+    tmp_path: Path, upstream: FakeUpstream, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Nonzero so make stops instead of training on a corpus that isn't there."""
+    monkeypatch.setattr(
+        "rlvr_from_scratch.data.fetch.SOURCES", {"a": make_src(BLOB + b"!")}
+    )
+    assert main(["--name", "a", "--dest", str(tmp_path)]) == 1

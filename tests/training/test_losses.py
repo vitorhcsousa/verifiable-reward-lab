@@ -77,7 +77,7 @@ def test_untrained_loss_near_ln_vocab() -> None:
     x, y = _batch()
     logits, _ = model(x)
     loss = cross_entropy_loss(logits, y)
-    assert float(loss) == pytest.approx(math.log(VOCAB), abs=0.15)
+    assert float(loss.detach()) == pytest.approx(math.log(VOCAB), abs=0.15)
 
 
 @pytest.mark.parametrize("vocab_size", [4, 65, 256])
@@ -88,7 +88,7 @@ def test_ln_vocab_holds_across_vocab_sizes(vocab_size: int) -> None:
     x, y = _batch(vocab_size)
     logits, _ = model(x)
     loss = cross_entropy_loss(logits, y)
-    assert float(loss) == pytest.approx(math.log(vocab_size), abs=0.2)
+    assert float(loss.detach()) == pytest.approx(math.log(vocab_size), abs=0.2)
 
 
 # =========================================================================
