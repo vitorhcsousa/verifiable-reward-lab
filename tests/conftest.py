@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from rlvr_from_scratch.model.transformer import TransformerConfig
-from rlvr_from_scratch.training.config import TrainConfig
+from verifiable_reward_lab.model.transformer import TransformerConfig
+from verifiable_reward_lab.training.config import TrainConfig
 
 # a pangram, so the vocab is exactly 26 letters plus space and newline.
 # repeated because get_batch needs a corpus longer than one window. keeps

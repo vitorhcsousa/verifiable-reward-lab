@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Literal
 
 import torch
 
-from rlvr_from_scratch.tokenizer.char import CharTokenizer
+from verifiable_reward_lab.tokenizer.char import CharTokenizer
 
 if TYPE_CHECKING:
     from torch import Tensor

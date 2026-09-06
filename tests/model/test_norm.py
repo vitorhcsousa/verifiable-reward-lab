@@ -15,7 +15,7 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-from rlvr_from_scratch.model.norm import RMSNorm, LayerNorm
+from verifiable_reward_lab.model.norm import RMSNorm, LayerNorm
 
 # =========================================================================
 # Constants and fixtures

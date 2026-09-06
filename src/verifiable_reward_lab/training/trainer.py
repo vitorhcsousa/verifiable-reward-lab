@@ -16,16 +16,16 @@ from typing import TYPE_CHECKING
 import numpy as np
 import torch
 
-from rlvr_from_scratch.data import fetch
-from rlvr_from_scratch.data.dataset import get_batch, load_corpus
-from rlvr_from_scratch.model.transformer import DecoderTransformer
-from rlvr_from_scratch.training.losses import cross_entropy_loss
+from verifiable_reward_lab.data import fetch
+from verifiable_reward_lab.data.dataset import get_batch, load_corpus
+from verifiable_reward_lab.model.transformer import DecoderTransformer
+from verifiable_reward_lab.training.losses import cross_entropy_loss
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from rlvr_from_scratch.data.dataset import Corpus
-    from rlvr_from_scratch.training.config import TrainConfig
+    from verifiable_reward_lab.data.dataset import Corpus
+    from verifiable_reward_lab.training.config import TrainConfig
 
 # keeps the eval generator off the training one, which would otherwise
 # evaluate on the windows the model just trained on

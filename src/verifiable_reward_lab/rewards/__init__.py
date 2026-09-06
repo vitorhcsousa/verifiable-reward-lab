@@ -8,7 +8,7 @@ hyperparameter and is not written yet.
 
 from __future__ import annotations
 
-from rlvr_from_scratch.rewards.verifier import (
+from verifiable_reward_lab.rewards.verifier import (
     Outcome,
     Verdict,
     extract,

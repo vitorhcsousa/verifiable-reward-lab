@@ -14,9 +14,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from rlvr_from_scratch.data.gsm8k import Example
-from rlvr_from_scratch.evaluation.config import EvalConfig
-from rlvr_from_scratch.evaluation.gsm8k_eval import (
+from verifiable_reward_lab.data.gsm8k import Example
+from verifiable_reward_lab.evaluation.config import EvalConfig
+from verifiable_reward_lab.evaluation.gsm8k_eval import (
     Generation,
     evaluate,
     peak_memory_mb,
@@ -155,7 +155,7 @@ class FakeSplit:
 def fake_split(monkeypatch: pytest.MonkeyPatch) -> FakeSplit:
     split = FakeSplit()
     monkeypatch.setattr(
-        "rlvr_from_scratch.evaluation.gsm8k_eval.load",
+        "verifiable_reward_lab.evaluation.gsm8k_eval.load",
         lambda *_, **__: split,
     )
     return split

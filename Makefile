@@ -10,7 +10,7 @@ dev: ## Install project with dev dependencies
 	uv sync --group dev
 
 data: ## Download and checksum-verify every pinned corpus
-	uv run python -m rlvr_from_scratch.data.fetch --all
+	uv run python -m verifiable_reward_lab.data.fetch --all
 
 train: ## Run the reference training run (CPU, one command, no manual data step)
 	uv run rlvr-train --config configs/tiny.yaml

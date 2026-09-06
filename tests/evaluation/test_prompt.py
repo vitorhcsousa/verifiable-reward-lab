@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from rlvr_from_scratch.evaluation.prompt import (
+from verifiable_reward_lab.evaluation.prompt import (
     ANSWER_PREFIX,
     EXEMPLARS,
     QUESTION_PREFIX,

@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from rlvr_from_scratch.model.sampling import _apply_top_p, sample
+from verifiable_reward_lab.model.sampling import _apply_top_p, sample
 
 B, V = 4, 50
 

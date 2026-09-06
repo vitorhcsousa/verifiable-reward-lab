@@ -22,15 +22,15 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from rlvr_from_scratch.evaluation.gsm8k_eval import Generation
-from rlvr_from_scratch.evaluation.prompt import STOP
+from verifiable_reward_lab.evaluation.gsm8k_eval import Generation
+from verifiable_reward_lab.evaluation.prompt import STOP
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from torch import Tensor
 
-    from rlvr_from_scratch.evaluation.config import EvalConfig
+    from verifiable_reward_lab.evaluation.config import EvalConfig
 
 
 class _Tokenizer(Protocol):

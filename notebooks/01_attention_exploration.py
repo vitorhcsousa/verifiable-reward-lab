@@ -26,7 +26,7 @@ def _(mo):
     > **How to use:** drag the sliders in the Configuration section below,
     > then scroll down. Every visualization updates automatically.
 
-    **Code:** [`src/rlvr_from_scratch/model/attention.py`](https://github.com/vitorhcsousa/verifiable-reward-lab)
+    **Code:** [`src/verifiable_reward_lab/model/attention.py`](https://github.com/vitorhcsousa/verifiable-reward-lab)
     **Article:** [Attention Is All You Need to Implement](https://www.vitorsousa.com/foundations/attention-from-scratch)
     """)
     return
@@ -576,7 +576,7 @@ def _(mo):
 
 @app.cell
 def _(X, d_model, mask, n_heads, seed, torch):
-    from rlvr_from_scratch.model.attention import MultiHeadAttention
+    from verifiable_reward_lab.model.attention import MultiHeadAttention
     from torchinfo import summary as ti_summary
 
     torch.manual_seed(seed)
@@ -618,7 +618,7 @@ def _(T, mo):
 
 @app.cell
 def _(B, T, X, d_k, go, mha, mo, n_heads, sl_gen_step, torch):
-    from rlvr_from_scratch.model.attention import causal_mask as _mk_mask
+    from verifiable_reward_lab.model.attention import causal_mask as _mk_mask
 
     _steps = sl_gen_step.value
     mha.eval()
@@ -701,7 +701,7 @@ def _(mo):
 
 @app.cell
 def _(B, T, d_model, mha, mo, torch):
-    from rlvr_from_scratch.model.attention import causal_mask as _mk_mask3
+    from verifiable_reward_lab.model.attention import causal_mask as _mk_mask3
 
     mha.train()
     _X_g = torch.randn(B, T, d_model, requires_grad=True)

@@ -10,8 +10,8 @@ import dataclasses
 import sys
 from pathlib import Path
 
-from rlvr_from_scratch.evaluation.config import EvalConfig
-from rlvr_from_scratch.evaluation.gsm8k_eval import run
+from verifiable_reward_lab.evaluation.config import EvalConfig
+from verifiable_reward_lab.evaluation.gsm8k_eval import run
 
 
 def build_parser() -> argparse.ArgumentParser:

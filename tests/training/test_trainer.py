@@ -10,10 +10,10 @@ from typing import TYPE_CHECKING
 import pytest
 import torch
 
-from rlvr_from_scratch.data.dataset import load_corpus
-from rlvr_from_scratch.model.transformer import DecoderTransformer
-from rlvr_from_scratch.training.config import TrainConfig
-from rlvr_from_scratch.training.trainer import (
+from verifiable_reward_lab.data.dataset import load_corpus
+from verifiable_reward_lab.model.transformer import DecoderTransformer
+from verifiable_reward_lab.training.config import TrainConfig
+from verifiable_reward_lab.training.trainer import (
     configure_optimizer,
     estimate_loss,
     lr_at,

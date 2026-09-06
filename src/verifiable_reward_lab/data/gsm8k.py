@@ -14,7 +14,7 @@ deterministic if the RNG implementation changes, if the file is re-fetched
 in a different order, or if the pool is filtered later. The split has to be
 re-derivable in W42 for the numbers to mean anything.
 
-    python -m rlvr_from_scratch.data.gsm8k
+    python -m verifiable_reward_lab.data.gsm8k
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from rlvr_from_scratch.data.fetch import DATA_DIR, SOURCES
+from verifiable_reward_lab.data.fetch import DATA_DIR, SOURCES
 
 DEV_SIZE = 500
 SPLIT_SEED = 1337  # the seed convention of configs/tiny.yaml

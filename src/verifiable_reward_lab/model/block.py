@@ -23,10 +23,10 @@ from __future__ import annotations
 import torch.nn as nn
 from torch import Tensor
 
-from rlvr_from_scratch.model.attention import MultiHeadAttention
-from rlvr_from_scratch.model.ffn import SwiGLU
-from rlvr_from_scratch.model.norm import RMSNorm
-from rlvr_from_scratch.model.positional import RotaryPositionalEmbedding
+from verifiable_reward_lab.model.attention import MultiHeadAttention
+from verifiable_reward_lab.model.ffn import SwiGLU
+from verifiable_reward_lab.model.norm import RMSNorm
+from verifiable_reward_lab.model.positional import RotaryPositionalEmbedding
 
 
 # =========================================================================

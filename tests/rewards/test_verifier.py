@@ -14,7 +14,7 @@ from decimal import Decimal
 
 import pytest
 
-from rlvr_from_scratch.rewards.verifier import (
+from verifiable_reward_lab.rewards.verifier import (
     Outcome,
     extract,
     gold_value,

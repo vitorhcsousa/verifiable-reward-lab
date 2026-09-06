@@ -7,7 +7,7 @@ import pytest
 import torch
 from torch import Tensor
 
-from rlvr_from_scratch.model.attention import (
+from verifiable_reward_lab.model.attention import (
     MultiHeadAttention,
     causal_mask,
     scaled_dot_product_attention,

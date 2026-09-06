@@ -10,8 +10,8 @@ import dataclasses
 import sys
 from pathlib import Path
 
-from rlvr_from_scratch.training.config import TrainConfig
-from rlvr_from_scratch.training.trainer import train
+from verifiable_reward_lab.training.config import TrainConfig
+from verifiable_reward_lab.training.trainer import train
 
 
 def build_parser() -> argparse.ArgumentParser:

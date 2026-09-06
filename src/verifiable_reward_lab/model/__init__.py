@@ -7,21 +7,21 @@ fully assembled decoder-only language model.
 
 from __future__ import annotations
 
-from rlvr_from_scratch.model.attention import (
+from verifiable_reward_lab.model.attention import (
     MultiHeadAttention,
     causal_mask,
     scaled_dot_product_attention,
 )
-from rlvr_from_scratch.model.block import TransformerBlock
-from rlvr_from_scratch.model.ffn import GeluFFN, SwiGLU
-from rlvr_from_scratch.model.norm import LayerNorm, RMSNorm
-from rlvr_from_scratch.model.positional import (
+from verifiable_reward_lab.model.block import TransformerBlock
+from verifiable_reward_lab.model.ffn import GeluFFN, SwiGLU
+from verifiable_reward_lab.model.norm import LayerNorm, RMSNorm
+from verifiable_reward_lab.model.positional import (
     ALiBi,
     LearnedPositionalEmbedding,
     RotaryPositionalEmbedding,
     SinusoidalPositionalEncoding,
 )
-from rlvr_from_scratch.model.transformer import (
+from verifiable_reward_lab.model.transformer import (
     DecoderTransformer,
     TransformerConfig,
 )

@@ -7,6 +7,6 @@ tokenizer. BPE later, if it earns it.
 
 from __future__ import annotations
 
-from rlvr_from_scratch.tokenizer.char import CharTokenizer
+from verifiable_reward_lab.tokenizer.char import CharTokenizer
 
 __all__ = ["CharTokenizer"]

@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import torch
 
-from rlvr_from_scratch.model.attention import MultiHeadAttention, causal_mask
-from rlvr_from_scratch.model.positional import RotaryPositionalEmbedding
+from verifiable_reward_lab.model.attention import MultiHeadAttention, causal_mask
+from verifiable_reward_lab.model.positional import RotaryPositionalEmbedding
 
 D_MODEL, N_HEADS, T = 16, 4, 5
 D_K = D_MODEL // N_HEADS
