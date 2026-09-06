@@ -213,7 +213,7 @@ def test_one_step_strictly_decreases_loss() -> None:
 
     logits, _ = model(x)
     after = cross_entropy_loss(logits, y)
-    assert float(after) < float(before)
+    assert float(after.detach()) < float(before.detach())
 
 
 # =========================================================================
