@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from rlvr_from_scratch.tokenizer.char import CharTokenizer
+from verifiable_reward_lab.tokenizer.char import CharTokenizer
 
 # =========================================================================
 # Constants and fixtures
@@ -108,7 +108,7 @@ def test_from_text_rejects_empty_text() -> None:
 
 _HASH_SEED_SCRIPT = (
     "import json;"
-    "from rlvr_from_scratch.tokenizer.char import CharTokenizer;"
+    "from verifiable_reward_lab.tokenizer.char import CharTokenizer;"
     f"print(json.dumps(CharTokenizer.from_text({CORPUS!r}).itos))"
 )
 

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
-from rlvr_from_scratch.model.transformer import TransformerConfig
+from verifiable_reward_lab.model.transformer import TransformerConfig
 
 if TYPE_CHECKING:
     from pathlib import Path

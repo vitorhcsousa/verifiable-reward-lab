@@ -15,7 +15,7 @@ from typing import Self
 
 import pytest
 
-from rlvr_from_scratch.data.fetch import (
+from verifiable_reward_lab.data.fetch import (
     DEFAULT,
     GSM8K_REV,
     SOURCES,
@@ -77,7 +77,7 @@ class FakeUpstream:
 def upstream(monkeypatch: pytest.MonkeyPatch) -> FakeUpstream:
     up = FakeUpstream(BLOB)
     monkeypatch.setattr(
-        "rlvr_from_scratch.data.fetch.urllib.request.urlopen", up.urlopen
+        "verifiable_reward_lab.data.fetch.urllib.request.urlopen", up.urlopen
     )
     return up
 
@@ -93,7 +93,7 @@ def test_sha256_matches_hashlib(tmp_path: Path) -> None:
 
 def test_sha256_spans_chunks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The chunked read must not depend on the blob fitting in one chunk."""
-    monkeypatch.setattr("rlvr_from_scratch.data.fetch.CHUNK", 7)
+    monkeypatch.setattr("verifiable_reward_lab.data.fetch.CHUNK", 7)
     p = tmp_path / "f.bin"
     p.write_bytes(BLOB)
     assert sha256(p) == hashlib.sha256(BLOB).hexdigest()
@@ -249,7 +249,7 @@ def test_all_fetches_every_source(
             note=src.note,
         ),
     }
-    monkeypatch.setattr("rlvr_from_scratch.data.fetch.SOURCES", two)
+    monkeypatch.setattr("verifiable_reward_lab.data.fetch.SOURCES", two)
 
     assert main(["--all", "--dest", str(tmp_path)]) == 0
     assert (tmp_path / "input.txt").read_bytes() == BLOB
@@ -262,6 +262,6 @@ def test_cli_reports_failure_with_nonzero(
 ) -> None:
     """Nonzero so make stops instead of training on a corpus that isn't there."""
     monkeypatch.setattr(
-        "rlvr_from_scratch.data.fetch.SOURCES", {"a": make_src(BLOB + b"!")}
+        "verifiable_reward_lab.data.fetch.SOURCES", {"a": make_src(BLOB + b"!")}
     )
     assert main(["--name", "a", "--dest", str(tmp_path)]) == 1

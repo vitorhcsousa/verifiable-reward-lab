@@ -25,16 +25,16 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol
 
-from rlvr_from_scratch.data.gsm8k import load
-from rlvr_from_scratch.evaluation.prompt import build_prompt, truncate_completion
-from rlvr_from_scratch.rewards.verifier import Outcome, verify
+from verifiable_reward_lab.data.gsm8k import load
+from verifiable_reward_lab.evaluation.prompt import build_prompt, truncate_completion
+from verifiable_reward_lab.rewards.verifier import Outcome, verify
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from pathlib import Path
 
-    from rlvr_from_scratch.data.gsm8k import Example
-    from rlvr_from_scratch.evaluation.config import EvalConfig
+    from verifiable_reward_lab.data.gsm8k import Example
+    from verifiable_reward_lab.evaluation.config import EvalConfig
 
 
 @dataclass(frozen=True)
@@ -201,7 +201,7 @@ def run(
     """
     # imported here so the eval loop, its tests and the GRPO rollout do not
     # pay for transformers when they never touch a checkpoint
-    from rlvr_from_scratch.evaluation.hf import HFGenerator
+    from verifiable_reward_lab.evaluation.hf import HFGenerator
 
     examples = select(config, data_dir)
     generator = HFGenerator(config)

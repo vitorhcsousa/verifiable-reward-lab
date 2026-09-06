@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from rlvr_from_scratch.reproduce import DEFAULT_TOLERANCE, main, read_val_loss
+from verifiable_reward_lab.reproduce import DEFAULT_TOLERANCE, main, read_val_loss
 
 if TYPE_CHECKING:
     from pathlib import Path

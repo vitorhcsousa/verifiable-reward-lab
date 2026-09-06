@@ -10,7 +10,7 @@ something" and "it downloaded the right thing" are different claims, and
 only the second one makes a run reproducible.
 
     make data
-    python -m rlvr_from_scratch.data.fetch --force   # re-download
+    python -m verifiable_reward_lab.data.fetch --force   # re-download
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from pathlib import Path
 # the code path that eventually points at a multi-GB pretraining shard.
 CHUNK = 1 << 20
 
-# src/rlvr_from_scratch/data/fetch.py -> repo root
+# src/verifiable_reward_lab/data/fetch.py -> repo root
 ROOT = Path(__file__).resolve().parents[3]
 DATA_DIR = ROOT / "data"
 

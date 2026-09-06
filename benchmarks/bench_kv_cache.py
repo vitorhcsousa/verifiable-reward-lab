@@ -4,7 +4,7 @@ import time
 import torch
 from torch import Tensor
 
-from rlvr_from_scratch.model.transformer import DecoderTransformer, TransformerConfig
+from verifiable_reward_lab.model.transformer import DecoderTransformer, TransformerConfig
 
 SEED = 0
 PROMPT_LEN = 16

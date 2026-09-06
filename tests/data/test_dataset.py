@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 import torch
 
-from rlvr_from_scratch.data.dataset import Corpus, get_batch, load_corpus
+from verifiable_reward_lab.data.dataset import Corpus, get_batch, load_corpus
 
 # =========================================================================
 # Constants and fixtures

@@ -6,7 +6,7 @@ import pytest
 import torch
 from torch import Tensor
 
-from rlvr_from_scratch.model.positional import (
+from verifiable_reward_lab.model.positional import (
     ALiBi,
     LearnedPositionalEmbedding,
     RotaryPositionalEmbedding,

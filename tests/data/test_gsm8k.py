@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from rlvr_from_scratch.data.fetch import SOURCES
-from rlvr_from_scratch.data.gsm8k import (
+from verifiable_reward_lab.data.fetch import SOURCES
+from verifiable_reward_lab.data.gsm8k import (
     HELD_OUT_FILE,
     TRAIN_FILE,
     Example,

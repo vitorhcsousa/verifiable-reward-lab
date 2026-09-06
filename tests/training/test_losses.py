@@ -18,8 +18,8 @@ import math
 import pytest
 import torch
 
-from rlvr_from_scratch.model import DecoderTransformer, TransformerConfig
-from rlvr_from_scratch.training.losses import cross_entropy_loss
+from verifiable_reward_lab.model import DecoderTransformer, TransformerConfig
+from verifiable_reward_lab.training.losses import cross_entropy_loss
 
 # =========================================================================
 # Constants and fixtures

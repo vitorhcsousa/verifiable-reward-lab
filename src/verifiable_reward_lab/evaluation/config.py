@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
-from rlvr_from_scratch.evaluation.prompt import EXEMPLARS
+from verifiable_reward_lab.evaluation.prompt import EXEMPLARS
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -17,8 +17,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from rlvr_from_scratch.model.transformer import TransformerConfig
-from rlvr_from_scratch.training.config import VERSION, TrainConfig
+from verifiable_reward_lab.model.transformer import TransformerConfig
+from verifiable_reward_lab.training.config import VERSION, TrainConfig
 
 
 def small_model(**kw: object) -> TransformerConfig:

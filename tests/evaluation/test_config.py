@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from rlvr_from_scratch.evaluation.config import VERSION, EvalConfig
+from verifiable_reward_lab.evaluation.config import VERSION, EvalConfig
 
 
 def test_defaults_are_the_frozen_choices() -> None:

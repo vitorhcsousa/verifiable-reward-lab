@@ -16,7 +16,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-from rlvr_from_scratch.model.positional import RotaryPositionalEmbedding
+from verifiable_reward_lab.model.positional import RotaryPositionalEmbedding
 
 
 # =========================================================================

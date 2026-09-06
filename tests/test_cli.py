@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from rlvr_from_scratch.cli import main
-from rlvr_from_scratch.training.config import TrainConfig
+from verifiable_reward_lab.cli import main
+from verifiable_reward_lab.training.config import TrainConfig
 from tests.conftest import tiny_config
 
 if TYPE_CHECKING:
@@ -30,7 +30,7 @@ def _offline(monkeypatch: pytest.MonkeyPatch, tiny_corpus: Path) -> None:
     through its real path — argument parsing, loading, overrides, train().
     """
     monkeypatch.setattr(
-        "rlvr_from_scratch.training.trainer.resolve_corpus_path",
+        "verifiable_reward_lab.training.trainer.resolve_corpus_path",
         lambda config: tiny_corpus,  # noqa: ARG005
     )
 

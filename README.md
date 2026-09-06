@@ -91,7 +91,7 @@ make check   # ruff + ty + pytest
 ```
 
 No corpus is versioned. `make data` fetches each one from a pinned URL and
-verifies a sha256 recorded in `src/rlvr_from_scratch/data/fetch.py`, failing
+verifies a sha256 recorded in `src/verifiable_reward_lab/data/fetch.py`, failing
 loudly if the bytes differ. It is idempotent — safe to re-run.
 
 Two corpora are pinned: tinyshakespeare, which the reference run trains on,
@@ -100,7 +100,7 @@ cannot move under the checksum. The GSM8K train/dev cut is content-addressed
 and re-derivable from its seed alone:
 
 ```bash
-uv run python -m rlvr_from_scratch.data.gsm8k   # counts + dev fingerprint
+uv run python -m verifiable_reward_lab.data.gsm8k   # counts + dev fingerprint
 ```
 
 Held-out is upstream's own test split, never re-cut from train.
@@ -123,7 +123,7 @@ Generate directly from the model layer:
 ```python
 import torch
 
-from rlvr_from_scratch.model.transformer import DecoderTransformer, TransformerConfig
+from verifiable_reward_lab.model.transformer import DecoderTransformer, TransformerConfig
 
 config = TransformerConfig(
     vocab_size=256, d_model=128, n_layers=4, n_heads=4, max_seq_len=256
@@ -144,7 +144,7 @@ sampled = model.generate(
 )
 ```
 
-Decoding lives in one pure function — [`model/sampling.py`](src/rlvr_from_scratch/model/sampling.py) — applied on logits, with the nucleus off-by-one handled and tested (`python -m rlvr_from_scratch.model.sampling` runs a tiny demo).
+Decoding lives in one pure function — [`model/sampling.py`](src/verifiable_reward_lab/model/sampling.py) — applied on logits, with the nucleus off-by-one handled and tested (`python -m verifiable_reward_lab.model.sampling` runs a tiny demo).
 
 ## reproducibility
 
@@ -197,7 +197,7 @@ tolerance. Wall clock on other hardware will differ; the loss should not.
 ## repo layout
 
 ```text
-src/rlvr_from_scratch/
+src/verifiable_reward_lab/
 ├── model/          # attention, positional, norm, ffn, block, transformer, sampling
 ├── tokenizer/      # character-level tokenizer
 ├── data/           # corpus fetch + checksum, encoding, batching

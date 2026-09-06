@@ -32,19 +32,20 @@ tracking = [
 ]
 
 [project.scripts]
-rlvr-train = "rlvr_from_scratch.cli:main"
-rlvr-eval = "rlvr_from_scratch.eval_cli:main"
-rlvr-compare = "rlvr_from_scratch.reproduce:main"
+rlvr-train = "verifiable_reward_lab.cli:main"
+rlvr-eval = "verifiable_reward_lab.eval_cli:main"
+rlvr-compare = "verifiable_reward_lab.reproduce:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-# the distribution is verifiable-reward-lab, the import package stays
-# rlvr_from_scratch. renaming the module would churn every import and
-# every article link for no user-facing gain.
+# distribution and import package carry the same name. they disagreed from
+# the rebrand until 2026-09-06, when the module was finally renamed too;
+# the cost of that churn was paid once, on purpose, rather than left as a
+# permanent footnote in every import line.
 [tool.hatch.build.targets.wheel]
-packages = ["src/rlvr_from_scratch"]
+packages = ["src/verifiable_reward_lab"]
 
 [dependency-groups]
 dev = [

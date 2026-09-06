@@ -5,11 +5,11 @@ from __future__ import annotations
 import pytest
 import torch
 
-from rlvr_from_scratch.model.attention import causal_mask
-from rlvr_from_scratch.model.block import TransformerBlock
-from rlvr_from_scratch.model.ffn import GeluFFN, SwiGLU
-from rlvr_from_scratch.model.norm import LayerNorm, RMSNorm
-from rlvr_from_scratch.model.positional import RotaryPositionalEmbedding
+from verifiable_reward_lab.model.attention import causal_mask
+from verifiable_reward_lab.model.block import TransformerBlock
+from verifiable_reward_lab.model.ffn import GeluFFN, SwiGLU
+from verifiable_reward_lab.model.norm import LayerNorm, RMSNorm
+from verifiable_reward_lab.model.positional import RotaryPositionalEmbedding
 
 B, T, D_MODEL, N_HEADS, D_FF = 2, 6, 16, 4, 64
 
