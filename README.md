@@ -86,13 +86,24 @@ inspected examples.
 git clone https://github.com/vitorhcsousa/verifiable-reward-lab.git
 cd verifiable-reward-lab
 uv sync --group dev
-make data    # download + checksum-verify the training corpus
+make data    # download + checksum-verify the pinned corpora
 make check   # ruff + ty + pytest
 ```
 
-The corpus is not versioned. `make data` fetches it from a pinned URL and
+No corpus is versioned. `make data` fetches each one from a pinned URL and
 verifies a sha256 recorded in `src/rlvr_from_scratch/data/fetch.py`, failing
 loudly if the bytes differ. It is idempotent — safe to re-run.
+
+Two corpora are pinned: tinyshakespeare, which the reference run trains on,
+and GSM8K, pinned to an upstream commit rather than a branch so the URL
+cannot move under the checksum. The GSM8K train/dev cut is content-addressed
+and re-derivable from its seed alone:
+
+```bash
+uv run python -m rlvr_from_scratch.data.gsm8k   # counts + dev fingerprint
+```
+
+Held-out is upstream's own test split, never re-cut from train.
 
 Then train:
 
@@ -203,7 +214,7 @@ configs/
 ## development
 
 ```text
-make data       # download + verify the training corpus
+make data       # download + verify the pinned corpora
 make train      # the reference run
 make reference  # the reference run twice, then check the two agree
 make check      # lint + type check + tests (what CI runs)
