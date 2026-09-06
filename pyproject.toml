@@ -17,6 +17,7 @@ dependencies = [
     "sentencepiece>=0.2.1",
     "torch>=2.11.0",
     "tqdm>=4.67.3",
+    "transformers>=4.50.0",
 ]
 
 [project.urls]
@@ -32,6 +33,7 @@ tracking = [
 
 [project.scripts]
 rlvr-train = "rlvr_from_scratch.cli:main"
+rlvr-eval = "rlvr_from_scratch.eval_cli:main"
 rlvr-compare = "rlvr_from_scratch.reproduce:main"
 
 [build-system]
